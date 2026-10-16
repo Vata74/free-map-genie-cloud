@@ -42,11 +42,10 @@ export const login = async (
 };
 
 export const getCredentials = (): Credentials => {
+  // .env is optional: CI (and anyone else exporting MG_EMAIL/MG_PASSWORD
+  // directly into the environment, e.g. from GitHub Actions secrets) has no
+  // .env file at all, so only fall back to it, don't require it.
   const config = dotenv.config();
-
-  if (config.error) {
-    throw config.error;
-  }
 
   const email = process.env.MG_EMAIL ?? config.parsed?.MG_EMAIL;
   const password = process.env.MG_PASSWORD ?? config.parsed?.MG_PASSWORD;
