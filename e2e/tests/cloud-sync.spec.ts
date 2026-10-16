@@ -41,7 +41,10 @@ test.describe("Cloud sync", () => {
     const mapPage = new MapPage(page);
 
     if (process.env.CI) {
-      page.on("console", (msg) => console.log("[page]", msg.text()));
+      page.on("console", (msg) => {
+        const text = msg.text();
+        if (/FMG|Error|error/i.test(text)) console.log("[page]", text);
+      });
     }
 
     await mapPage.gotoTarkovFactoryMap();
