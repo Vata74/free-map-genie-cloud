@@ -465,10 +465,18 @@ export class MapPage extends Page {
     this.lockProData();
 
     await this.activateMapScript();
+
+    // Must be registered before the interceptor goes live: installRequestInterceptor()
+    // is what lets a marked-location PUT reach the Client and emit "locationMarked"
+    // internally, and that emit only reaches whichever listeners are already
+    // registered at that moment. Registering this after installing the interceptor
+    // left a window where an early mark's event had nothing to forward it to window,
+    // and was silently lost.
+    this.setupEventListeners();
+
     await this.installRequestInterceptor();
     await this.syncSavedLocationsToMap();
 
-    this.setupEventListeners();
     await this.ui.mount();
 
     // Restore fmgMapId param on pro maps

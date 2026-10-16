@@ -71,19 +71,6 @@ test.describe("Cloud sync", () => {
       await mapPage.axios.put(`/api/v1/user/locations/${TEST_LOCATION_ID}`);
     }).toPass({ timeout: 10000, intervals: [500, 1000, 1500] });
 
-    // KNOWN ISSUE (CI only, not reproduced locally): the PUT above does get
-    // intercepted (confirmed via diagnostic logging - it resolves with
-    // block()'s {data: undefined, status: 200} shape instead of hitting the
-    // network), but __fmgTestMarks stays empty, meaning the window-level
-    // "locationMarked" event (dispatched by setupEventListeners() in
-    // src/contexts/page/pages/map/index.ts, forwarding the Client's
-    // internal event) never arrives. Current best guess: something causes
-    // content.js to inject more than once on CI specifically (an extra
-    // reload/navigation around the consent banner?), leaving the
-    // interceptor that actually wins and the Client instance wired up to
-    // forward to window as two different objects. Needs a repro in a real
-    // (non-headless, non-CI) environment to confirm. Tracked, not yet
-    // fixed - see commit history around this comment for the investigation.
     await expect
       .poll(() =>
         page.evaluate(
