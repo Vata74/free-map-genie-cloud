@@ -40,13 +40,6 @@ test.describe("Cloud sync", () => {
   }) => {
     const mapPage = new MapPage(page);
 
-    if (process.env.CI) {
-      page.on("console", (msg) => {
-        const text = msg.text();
-        if (/FMG|Error|error/i.test(text)) console.log("[page]", text);
-      });
-    }
-
     await mapPage.gotoTarkovFactoryMap();
     await mapPage.waitForAxiosInterceptor();
 
@@ -75,31 +68,31 @@ test.describe("Cloud sync", () => {
     // first). Retry the PUT briefly instead of tightening that shared
     // helper's timing assumptions.
     await expect(async () => {
-      const response = await mapPage.axios.put(
-        `/api/v1/user/locations/${TEST_LOCATION_ID}`
-      );
-      if (process.env.CI) {
-        console.log("[put response]", JSON.stringify(response.data), response.status);
-      }
+      await mapPage.axios.put(`/api/v1/user/locations/${TEST_LOCATION_ID}`);
     }).toPass({ timeout: 10000, intervals: [500, 1000, 1500] });
 
+    // KNOWN ISSUE (CI only, not reproduced locally): the PUT above does get
+    // intercepted (confirmed via diagnostic logging - it resolves with
+    // block()'s {data: undefined, status: 200} shape instead of hitting the
+    // network), but __fmgTestMarks stays empty, meaning the window-level
+    // "locationMarked" event (dispatched by setupEventListeners() in
+    // src/contexts/page/pages/map/index.ts, forwarding the Client's
+    // internal event) never arrives. Current best guess: something causes
+    // content.js to inject more than once on CI specifically (an extra
+    // reload/navigation around the consent banner?), leaving the
+    // interceptor that actually wins and the Client instance wired up to
+    // forward to window as two different objects. Needs a repro in a real
+    // (non-headless, non-CI) environment to confirm. Tracked, not yet
+    // fixed - see commit history around this comment for the investigation.
     await expect
-      .poll(
-        async () => {
-          const marks = await page.evaluate(
-            () => (window as any).__fmgTestMarks
-          );
-          if (process.env.CI) {
-            console.log("[marks]", JSON.stringify(marks));
-          }
-          return (marks as { locationId: number }[]).some(
-            (m) => m.locationId === TEST_LOCATION_ID
-          );
-        },
-        // Default 5s poll timeout is tight for the full round trip (page ->
-        // backend content script -> Dexie write -> event dispatch back),
-        // especially cold on a CI runner. Give it more room there.
-        { timeout: 15000 }
+      .poll(() =>
+        page.evaluate(
+          (locationId) =>
+            ((window as any).__fmgTestMarks as { locationId: number }[]).some(
+              (m) => m.locationId === locationId
+            ),
+          TEST_LOCATION_ID
+        )
       )
       .toBe(true);
 
