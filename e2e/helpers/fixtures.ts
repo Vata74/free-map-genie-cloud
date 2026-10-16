@@ -176,13 +176,13 @@ export const test = base.extend<ExtensionFixtures>({
   },
   v1StorageUserDataExpected: async ({}, use) => {
     const data = await readData<Record<string, ExpectedUserData>>(
-      "userData.v1.expected.json"
+      "userdata.v1.expected.json"
     );
     await use(data);
   },
   v2StorageUserDataExpected: async ({}, use) => {
     const data = await readData<Record<string, ExpectedUserData>>(
-      "userData.v2.expected.json"
+      "userdata.v2.expected.json"
     );
     await use(data);
   },

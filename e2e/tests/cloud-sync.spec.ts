@@ -72,14 +72,19 @@ test.describe("Cloud sync", () => {
     }).toPass({ timeout: 10000, intervals: [500, 1000, 1500] });
 
     await expect
-      .poll(() =>
-        page.evaluate(
-          (locationId) =>
-            ((window as any).__fmgTestMarks as { locationId: number }[]).some(
-              (m) => m.locationId === locationId
-            ),
-          TEST_LOCATION_ID
-        )
+      .poll(
+        () =>
+          page.evaluate(
+            (locationId) =>
+              ((window as any).__fmgTestMarks as { locationId: number }[]).some(
+                (m) => m.locationId === locationId
+              ),
+            TEST_LOCATION_ID
+          ),
+        // Default 5s poll timeout is tight for the full round trip (page ->
+        // backend content script -> Dexie write -> event dispatch back),
+        // especially cold on a CI runner. Give it more room there.
+        { timeout: 15000 }
       )
       .toBe(true);
 
