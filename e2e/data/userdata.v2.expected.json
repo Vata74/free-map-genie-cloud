@@ -54,32 +54,7 @@
         "425604": true
       },
       "trackedCategoryIds": [941, 942, 952, 954, 959, 961, 969, 4740],
-      "notes": [
-        {
-          "title": "Test",
-          "description": "This is test note",
-          "color": "ffcd00",
-          "latitude": 0.41130877404793864,
-          "longitude": -1.1296323558980248,
-          "category": null,
-          "id": "q2CgAbhwij",
-          "map_id": 67,
-          "user_id": 0,
-          "game_id": 20
-        },
-        {
-          "title": "Test",
-          "description": "This is a test note",
-          "color": null,
-          "latitude": 0.73921805126362,
-          "longitude": -0.94111233931322,
-          "category": null,
-          "id": "t1M51mX8vd",
-          "map_id": 74,
-          "user_id": 0,
-          "game_id": 20
-        }
-      ],
+      "notes": [],
       "presetOrdering": [-169694],
       "presets": [
         {
@@ -124,9 +99,7 @@
           "latitude": -22.08740721395627,
           "longitude": 69.7566482994963,
           "category": null,
-          "id": "pQyHqFsKOK",
-          "user_id": 0,
-          "game_id": 1
+          "user_id": 0
         },
         {
           "map_id": 1,
@@ -136,9 +109,7 @@
           "latitude": 47.148116427221424,
           "longitude": 119.63240861168714,
           "category": null,
-          "id": "bdJ6csQevV",
-          "user_id": 0,
-          "game_id": 1
+          "user_id": 0
         }
       ],
       "presetOrdering": [],

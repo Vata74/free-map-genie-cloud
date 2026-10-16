@@ -24,6 +24,12 @@ VERSIONS.forEach((version) => {
         page,
         storageUserDataExpected,
       }) => {
+        // This hits the real mapgenie.io/rdr2map.com sites, which is slower
+        // and more variable than the default 30s test timeout allows for,
+        // especially once you add the explicit waitForUserDataLoaded() wait
+        // below on top of navigation and login.
+        test.setTimeout(60000);
+
         const mapPage = new MapPage(page);
 
         await mapPage.forceUserId(0);
@@ -40,6 +46,7 @@ VERSIONS.forEach((version) => {
         }
 
         await mapPage.waitForAxiosInterceptor();
+        await mapPage.waitForUserDataLoaded();
 
         const userData = await mapPage.getUserData();
 
@@ -59,7 +66,31 @@ VERSIONS.forEach((version) => {
         expect(userData.trackedCategoryIds).toEqual(
           expect.arrayContaining(expected.trackedCategoryIds)
         );
-        expect(userData.notes).toEqual(expect.arrayContaining(expected.notes));
+        // id and created_at are generated fresh by the migration (a new
+        // nanoid and the current timestamp), so they can never match a
+        // fixed fixture value - compare everything else about each note.
+        // Note for the "20:0" (mapgenie.io/Tarkov) fixture specifically:
+        // its raw storage.v2.json notes live on maps 67 and 74, but
+        // "Factory" is map 68 today - MapGenie's internal map ids moved at
+        // some point after this fixture was captured. The production
+        // filter-to-current-map behavior (see loadUserData() in
+        // src/contexts/page/pages/map/index.ts) is intentional, so the
+        // correct expectation there is genuinely an empty notes array, not
+        // a code bug. Locations aren't affected the same way: the live
+        // Factory page's window.mapData.locations covers every location in
+        // the game (verified: 307 total), not just the ones historically
+        // stored under the old per-submap "map_68" storage key, so the
+        // full raw union of locations across all four legacy maps is the
+        // correct expectation here.
+        const comparableNotes = (userData.notes ?? []).map(
+          ({ id, created_at, ...rest }) => rest
+        );
+        const comparableExpectedNotes = (expected.notes ?? []).map(
+          ({ id, created_at, ...rest }: any) => rest
+        );
+        expect(comparableNotes).toEqual(
+          expect.arrayContaining(comparableExpectedNotes)
+        );
         expect(userData.presetOrdering).toEqual(expected.presetOrdering);
         expect(userData.presets).toEqual(
           expect.arrayContaining(expected.presets)

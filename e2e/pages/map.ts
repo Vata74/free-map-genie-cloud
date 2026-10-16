@@ -17,6 +17,21 @@ export class MapPage extends AxiosPage {
     return this.page.waitForFunction("!!window.user");
   }
 
+  public async waitForUserDataLoaded() {
+    // window.mapData.presets is only ever assigned at the very end of
+    // loadUserData() (src/contexts/page/pages/map/index.ts), after
+    // locations/notes have been migrated and filtered down to the current
+    // map. That step races a 5s internal timeout but is never cancelled on
+    // timeout, so waiting here (with a longer timeout) is the reliable way
+    // to know the filtering has actually finished, instead of racing it via
+    // an earlier signal like the axios interceptor existing.
+    return this.page.waitForFunction(
+      "window.mapData?.presets !== undefined",
+      undefined,
+      { timeout: 30000 }
+    );
+  }
+
   public async getGameId() {
     return this.page.evaluate(() => window.game!.id);
   }
