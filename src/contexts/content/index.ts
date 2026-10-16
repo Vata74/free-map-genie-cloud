@@ -14,6 +14,17 @@ export default defineContentScript({
   allFrames: true,
   runAt: "document_start",
   async main() {
+    // Guards against content.js injecting page.js twice into the same
+    // document. This genuinely happens (e.g. the script gets re-injected
+    // around a navigation/redirect), and since page.js runs MapPage/Client
+    // in the main world, a second run creates a second Client with its own
+    // AxiosInterceptor stacked on the same window.axios - whichever one
+    // actually finishes start() and wires up its event forwarding becomes
+    // a toss-up, which showed up as the "locationMarked" window event
+    // sometimes just not arriving.
+    if ((window as any).__fmgContentInjected) return;
+    (window as any).__fmgContentInjected = true;
+
     const params = new URLSearchParams(window.location.search);
     if (params.has("fmgBackend")) return;
     if (params.has("fmgStorage")) return;

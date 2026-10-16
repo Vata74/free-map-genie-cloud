@@ -1,0 +1,53 @@
+name: MapGenie compatibility
+
+# The main signal: does the extension still work against the real
+# mapgenie.io site. Runs daily, plus on demand. Separate from the cloud
+# sync workflow on purpose, so a cloud-only problem never makes this badge
+# (the one that actually means "is the extension broken") read red.
+
+on:
+  schedule:
+    - cron: "17 7 * * *" # once a day
+  workflow_dispatch: {} # lets us trigger it manually too, from the Actions tab
+
+jobs:
+  compat-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    env:
+      MG_EMAIL: ${{ secrets.MG_EMAIL }}
+      MG_PASSWORD: ${{ secrets.MG_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Unit tests (map.js compatibility layer)
+        run: node --test tests/map-compat.test.mjs
+
+      - name: Build the extension
+        run: npm run build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      # mapgenie.io is sometimes slow/unresponsive to GitHub's shared runner
+      # IPs specifically (not reproduced from a residential connection), on
+      # top of Playwright's own per-test retries (2, set in
+      # playwright.config.ts). Retrying the whole run a few times on top of
+      # that absorbs most of that: a transient block window rarely spans
+      # three separate attempts minutes apart.
+      - name: End-to-end tests against the real site
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 4
+          retry_wait_seconds: 30
+          command: npx playwright test --project=chromium e2e/tests/migration.spec.ts

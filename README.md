@@ -1,10 +1,11 @@
 # Free Map Genie Cloud
 
-[![Daily compatibility check](https://github.com/Vata74/free-map-genie-cloud/actions/workflows/daily-compat-check.yml/badge.svg)](https://github.com/Vata74/free-map-genie-cloud/actions/workflows/daily-compat-check.yml)
+[![MapGenie compatibility](https://github.com/Vata74/free-map-genie-cloud/actions/workflows/compat-check.yml/badge.svg)](https://github.com/Vata74/free-map-genie-cloud/actions/workflows/compat-check.yml)
+[![Cloud sync](https://github.com/Vata74/free-map-genie-cloud/actions/workflows/cloud-sync-check.yml/badge.svg)](https://github.com/Vata74/free-map-genie-cloud/actions/workflows/cloud-sync-check.yml)
 
 Browser extension that unlocks MapGenie Pro features for free, with an added cloud sync layer so your progress survives a browser reset and follows you across devices.
 
-A workflow runs the full test suite against the real mapgenie.io site every day, so a MapGenie-side change shows up as a red badge above instead of someone's browser being the first to notice.
+Two separate daily checks against the real mapgenie.io site, on purpose: **MapGenie compatibility** is "does the extension itself still work" (map loading, marking locations, the stuff everyone needs) - if that's red, something's actually broken. **Cloud sync** is just the Firebase backup layer - if only that one's red, the extension still works fine, you'd just want to hold off relying on cloud backup until it's green again.
 
 This is a fork of [NR2BJ/free-map-genie](https://github.com/NR2BJ/free-map-genie), the actively maintained fork that keeps up with MapGenie's site changes. NR2BJ's fork is itself based on the original [V1P3R-FMG/free-map-genie](https://github.com/V1P3R-FMG/free-map-genie), created by [MrFusiion](https://github.com/MrFusiion). See [Credits](#credits).
 
