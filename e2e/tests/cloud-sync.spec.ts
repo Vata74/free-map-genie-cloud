@@ -40,6 +40,10 @@ test.describe("Cloud sync", () => {
   }) => {
     const mapPage = new MapPage(page);
 
+    if (process.env.CI) {
+      page.on("console", (msg) => console.log("[page]", msg.text()));
+    }
+
     await mapPage.gotoTarkovFactoryMap();
     await mapPage.waitForAxiosInterceptor();
 
@@ -68,7 +72,12 @@ test.describe("Cloud sync", () => {
     // first). Retry the PUT briefly instead of tightening that shared
     // helper's timing assumptions.
     await expect(async () => {
-      await mapPage.axios.put(`/api/v1/user/locations/${TEST_LOCATION_ID}`);
+      const response = await mapPage.axios.put(
+        `/api/v1/user/locations/${TEST_LOCATION_ID}`
+      );
+      if (process.env.CI) {
+        console.log("[put response]", JSON.stringify(response.data), response.status);
+      }
     }).toPass({ timeout: 10000, intervals: [500, 1000, 1500] });
 
     await expect
