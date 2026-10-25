@@ -2,7 +2,7 @@
   "name": "fmg",
   "description": "Enhance mapgenie.io features.",
   "private": true,
-  "version": "3.0.16",
+  "version": "3.0.17",
   "author": "Vata74",
   "homepage": "https://github.com/Vata74/free-map-genie-cloud",
   "type": "module",

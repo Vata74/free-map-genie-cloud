@@ -4,6 +4,7 @@ import { RememberToggleInteriorsOverlaySetting } from "./settings/rememberToggle
 import { RememberTagFiltersSetting } from "./settings/rememberTagFilters";
 import { SwapTileCoordinatesSetting } from "./settings/swapTileCoordinates";
 import { RememberCategoryFiltersSetting } from "./settings/rememberCategoryFilters";
+import { ShowNotesOnLoadSetting } from "./settings/showNotesOnLoad";
 
 import type { CustomSetting } from "./customSetting";
 
@@ -12,6 +13,7 @@ export * from "./customSetting";
 export class CustomSettings {
   public readonly rememberFoundLocationsShown =
     new RememberFoundLocationsShownSetting();
+  public readonly showNotesOnLoad = new ShowNotesOnLoadSetting();
   public readonly rememberMapType = new RememberMapTypeSetting();
   public readonly rememberToggleInteriorsOverlay =
     new RememberToggleInteriorsOverlaySetting();

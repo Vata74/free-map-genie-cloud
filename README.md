@@ -112,6 +112,16 @@ Extensions don't run on mobile Safari or Chrome. On Android, [Kiwi Browser](http
 
 FMG save data lives in an IndexedDB database named `fmg:database`, inside the extension's offscreen document. Clearing "cookies and other site data" broadly (not just cache) removes it — that's the main reason to link a real account rather than relying on the anonymous backup alone.
 
+## Local Notes Setting
+
+Enable **Show Notes on Load** in the map's SETTINGS section to show notes
+automatically after loading a map. The option is off by default and saved
+locally per game. Enabling it also shows notes immediately. You can still
+hide notes manually during the session; disabling the option only stops
+automatic showing on future loads and does not hide the current notes.
+
+This setting does not change note contents or add cloud synchronization.
+
 ## Build
 
 This project uses WXT and yarn.
