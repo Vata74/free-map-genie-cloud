@@ -6,6 +6,7 @@ import {
   isNativeProfile,
   removeNativeProfile,
   renameNativeProfile,
+  setActiveNativeProfileId,
 } from "@/common/mapgenie";
 
 import backendService from "@/services/backend.service";
@@ -329,22 +330,41 @@ export class Client {
     // MapGenie's "Map profiles" (multiple save slots per account) are a Pro
     // feature enforced server-side: creating one past the first gets a 402
     // from the real API no matter what client-side flags say. These four
-    // routes back a local-only stand-in instead - see nativeProfiles.ts for
-    // why it's cosmetic (shared data, not real separate tracking) rather
-    // than forwarding to MapGenie's servers.
+    // routes back a local-only stand-in instead, with real separate
+    // found-locations/notes/categories data per profile - see
+    // nativeProfiles.ts and Key.fromWindow() for how.
+    //
+    // The lookup scope for "which native profiles exist" is always the real
+    // account id (window.user.realId), not this.key.userId - once a native
+    // profile is active, this.key.userId IS that profile's own id, which
+    // would make the lookup scope itself to one single profile instead of
+    // the account's whole list.
 
-    this.interceptor.post<{ gameId: string }, { name?: string }>(
+    this.interceptor.post<{ gameId: string }, { name?: string; copy_from?: number | "default" | null }>(
       "/api/v1/user/games/:gameId/profiles",
       async (ctx) => {
         const name = ctx.postData?.name?.trim();
         if (!name) return;
+        if (!window.user) return;
 
         logger.debug("Intercepted create-profile request", ctx);
-        const profile = addNativeProfile(
-          Number(ctx.params.gameId),
-          this.key.userId,
-          name
-        );
+        const gameId = Number(ctx.params.gameId);
+        const realUserId = window.user.realId ?? window.user.id;
+        const profile = addNativeProfile(gameId, realUserId, name);
+
+        const copyFrom = ctx.postData?.copy_from;
+        if (copyFrom) {
+          const fromUserId = copyFrom === "default" ? realUserId : copyFrom;
+          try {
+            await this.backend.copyProfileData(
+              new Key(gameId, fromUserId),
+              new Key(gameId, profile.id)
+            );
+          } catch (err) {
+            logger.error("Could not copy progress into the new profile.", err);
+          }
+        }
+
         ctx.block(profile);
       }
     );
@@ -352,8 +372,11 @@ export class Client {
     this.interceptor.put<{ id: string }, { name?: string }>(
       "/api/v1/user/profiles/:id",
       async (ctx) => {
+        if (!window.user) return;
+        const realUserId = window.user.realId ?? window.user.id;
+
         const id = Number(ctx.params.id);
-        if (!isNativeProfile(this.key.gameId, this.key.userId, id)) return;
+        if (!isNativeProfile(this.key.gameId, realUserId, id)) return;
 
         const name = ctx.postData?.name?.trim();
         if (!name) return;
@@ -361,7 +384,7 @@ export class Client {
         logger.debug("Intercepted rename-profile request", ctx);
         const profile = renameNativeProfile(
           this.key.gameId,
-          this.key.userId,
+          realUserId,
           id,
           name
         );
@@ -372,11 +395,14 @@ export class Client {
     this.interceptor.delete<{ id: string }>(
       "/api/v1/user/profiles/:id",
       async (ctx) => {
+        if (!window.user) return;
+        const realUserId = window.user.realId ?? window.user.id;
+
         const id = Number(ctx.params.id);
-        if (!isNativeProfile(this.key.gameId, this.key.userId, id)) return;
+        if (!isNativeProfile(this.key.gameId, realUserId, id)) return;
 
         logger.debug("Intercepted delete-profile request", ctx);
-        removeNativeProfile(this.key.gameId, this.key.userId, id);
+        removeNativeProfile(this.key.gameId, realUserId, id);
         ctx.block();
       }
     );
@@ -384,10 +410,13 @@ export class Client {
     this.interceptor.post<{ gameId: string }, { profile_id: number | null }>(
       "/api/v1/user/games/:gameId/profiles/active",
       async (ctx) => {
+        if (!window.user) return;
+        const realUserId = window.user.realId ?? window.user.id;
+
         const profileId = ctx.postData?.profile_id ?? null;
         if (
           profileId !== null &&
-          !isNativeProfile(this.key.gameId, this.key.userId, profileId)
+          !isNativeProfile(this.key.gameId, realUserId, profileId)
         ) {
           // Not one of our local profiles - a real one, or the default.
           // Let the request go through to MapGenie's servers as normal.
@@ -395,10 +424,16 @@ export class Client {
         }
 
         logger.debug("Intercepted switch-active-profile request", ctx);
-        if (window.user) {
-          window.user.activeProfileId = profileId;
-        }
+
+        setActiveNativeProfileId(this.key.gameId, realUserId, profileId);
+        window.user.activeProfileId = profileId;
         ctx.block({});
+
+        // The new profile needs its own separate data loaded from scratch
+        // (Key.fromWindow() now resolves differently), which this page's
+        // init flow only does on load - same approach FMG's own Guest
+        // profile switching already uses (reloadActiveTab()).
+        window.location.reload();
       }
     );
   }

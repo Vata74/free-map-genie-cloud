@@ -166,6 +166,15 @@ class BackendService {
     return this.database.getData(key);
   }
 
+  // Backs the "Copy progress from the current profile" checkbox when
+  // creating a MapGenie native profile (see common/mapgenie/nativeProfiles.ts).
+  public async copyProfileData(fromKey: Key, toKey: Key) {
+    await this.cloudSync.pullIfNeeded(fromKey);
+    const data = await this.database.getData(fromKey);
+    await this.database.setData(toKey, data);
+    this.cloudSync.schedulePush(toKey);
+  }
+
   public async removeData(key: Key) {
     await this.database.removeData(key);
     this.cloudSync.schedulePush(key);

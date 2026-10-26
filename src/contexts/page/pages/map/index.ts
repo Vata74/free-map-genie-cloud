@@ -6,7 +6,11 @@ import { activateBlockedMapgenieScript } from "@/common/mapgenie";
 import { mapDataUtils } from "@/common/mapgenie";
 import { waitForProperty } from "@/common/object";
 
-import { fixMapLinks, getNativeProfiles } from "@/common/mapgenie";
+import {
+  fixMapLinks,
+  getNativeProfiles,
+  getActiveNativeProfileId,
+} from "@/common/mapgenie";
 import { LazyGetter } from "lazy-get-decorator";
 
 export class MapPage extends Page {
@@ -56,6 +60,21 @@ export class MapPage extends Page {
       user.id = activeUserId ?? user.id;
     } catch (err) {
       logger.warn("Could not load active FMG profile before map boot.", err);
+    }
+  }
+
+  // Restores which MapGenie native profile (see
+  // common/mapgenie/nativeProfiles.ts) was active, if any, before
+  // Key.fromWindow() gets called - the real account never learns about
+  // these profiles, so MapGenie's own bootstrap always reports the default
+  // one instead.
+  private restoreActiveNativeProfile() {
+    if (!window.user || !window.game) return;
+
+    const realUserId = window.user.realId ?? window.user.id;
+    const activeId = getActiveNativeProfileId(window.game.id, realUserId);
+    if (activeId !== null) {
+      window.user.activeProfileId = activeId;
     }
   }
 
@@ -271,25 +290,32 @@ export class MapPage extends Page {
 
       // Merge in any locally-created "Map profiles" (see
       // common/mapgenie/nativeProfiles.ts) so they survive a reload instead
-      // of only existing in the page's in-memory state until now.
+      // of only existing in the page's in-memory state until now. Scoped by
+      // the real account id, not this.client.key.userId - that one may
+      // already be a native profile's own id by this point.
       try {
-        const localProfiles = getNativeProfiles(
-          this.client.key.gameId,
-          this.client.key.userId
-        );
-        if (localProfiles.length > 0) {
-          const existingIds = new Set(
-            (window.user.profiles ?? []).map((p) => p.id)
-          );
-          window.user.profiles = [
-            ...(window.user.profiles ?? []),
-            ...localProfiles.filter((p) => !existingIds.has(p.id)),
-          ];
+        if (window.game) {
+          const realUserId = window.user.realId ?? window.user.id;
+          const localProfiles = getNativeProfiles(window.game.id, realUserId);
+          if (localProfiles.length > 0) {
+            const existingIds = new Set(
+              (window.user.profiles ?? []).map((p) => p.id)
+            );
+            window.user.profiles = [
+              ...(window.user.profiles ?? []),
+              ...localProfiles.filter((p) => !existingIds.has(p.id)),
+            ];
+          }
         }
       } catch (err) {
         logger.debug("Could not merge local map profiles.", err);
       }
       this.lockValue(window.user, "profiles", window.user.profiles);
+      this.lockValue(
+        window.user,
+        "activeProfileId",
+        window.user.activeProfileId ?? null
+      );
     }
 
     if (window.mapData) {
@@ -432,6 +458,7 @@ export class MapPage extends Page {
     await waitForProperty(window, "mapData");
 
     await this.setupUser();
+    this.restoreActiveNativeProfile();
 
     // Load map data and heatmaps for pro maps and maps with heatmaps
     await this.loadRemoteMapData();

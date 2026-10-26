@@ -42,7 +42,7 @@ const { MapPage } = await loadModule("../src/contexts/page/pages/map/index.ts", 
   "../page": "export class Page {}",
   "./ui": "export class UI {}",
   "@/common/client": "export class Client {}",
-  "@/common/mapgenie": "export const activateBlockedMapgenieScript = async () => true; export const mapDataUtils = {}; export const fixMapLinks = async () => {}; export const getNativeProfiles = () => [];",
+  "@/common/mapgenie": "export const activateBlockedMapgenieScript = async () => true; export const mapDataUtils = {}; export const fixMapLinks = async () => {}; export const getNativeProfiles = () => []; export const getActiveNativeProfileId = () => null;",
   "@/common/object": "export const waitForProperty = async (obj, key) => obj[key];",
   "lazy-get-decorator": "export const LazyGetter = () => () => {};",
 });
