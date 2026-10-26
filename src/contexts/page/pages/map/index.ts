@@ -7,6 +7,7 @@ import { mapDataUtils } from "@/common/mapgenie";
 import { waitForProperty } from "@/common/object";
 
 import { fixMapLinks } from "@/common/mapgenie";
+import { getNativeProfiles } from "@/common/mapgenie/nativeProfiles";
 import { LazyGetter } from "lazy-get-decorator";
 
 export class MapPage extends Page {
@@ -268,6 +269,28 @@ export class MapPage extends Page {
         "trackedCategoryIds",
         window.user.trackedCategoryIds
       );
+
+      // Merge in any locally-created "Map profiles" (see
+      // common/mapgenie/nativeProfiles.ts) so they survive a reload instead
+      // of only existing in the page's in-memory state until now.
+      try {
+        const localProfiles = getNativeProfiles(
+          this.client.key.gameId,
+          this.client.key.userId
+        );
+        if (localProfiles.length > 0) {
+          const existingIds = new Set(
+            (window.user.profiles ?? []).map((p) => p.id)
+          );
+          window.user.profiles = [
+            ...(window.user.profiles ?? []),
+            ...localProfiles.filter((p) => !existingIds.has(p.id)),
+          ];
+        }
+      } catch (err) {
+        logger.debug("Could not merge local map profiles.", err);
+      }
+      this.lockValue(window.user, "profiles", window.user.profiles);
     }
 
     if (window.mapData) {

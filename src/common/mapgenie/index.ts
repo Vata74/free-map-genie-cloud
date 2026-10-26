@@ -9,6 +9,7 @@ export { default as MapgenieAdBlocker } from "./ads";
 
 export * from "./page";
 export * from "./links";
+export * from "./nativeProfiles";
 export * as mapDataUtils from "./data";
 
 /**

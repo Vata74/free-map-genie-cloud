@@ -49,6 +49,8 @@ declare namespace MG {
     trackedCategoryIds: number[];
     // presets: MG.Preset[];
     suggestions: unknown[];
+    profiles?: { id: number; name: string }[];
+    activeProfileId?: number | null;
   }
 
   declare interface Game {

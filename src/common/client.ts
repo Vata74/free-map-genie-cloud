@@ -1,6 +1,12 @@
 import { Key } from "@/common/storage";
 import { AxiosInterceptor } from "@/common/axios";
 import { waitForProperty } from "@/common/object";
+import {
+  addNativeProfile,
+  isNativeProfile,
+  removeNativeProfile,
+  renameNativeProfile,
+} from "@/common/mapgenie/nativeProfiles";
 
 import backendService from "@/services/backend.service";
 import mapgenieService from "@/services/mapgenie.service";
@@ -317,6 +323,82 @@ export class Client {
         logger.debug("Intercepted preset reorder request", ctx);
         await this.backend.reorderPresets(this.key, ctx.postData.ordering);
         ctx.block();
+      }
+    );
+
+    // MapGenie's "Map profiles" (multiple save slots per account) are a Pro
+    // feature enforced server-side: creating one past the first gets a 402
+    // from the real API no matter what client-side flags say. These four
+    // routes back a local-only stand-in instead - see nativeProfiles.ts for
+    // why it's cosmetic (shared data, not real separate tracking) rather
+    // than forwarding to MapGenie's servers.
+
+    this.interceptor.post<{ gameId: string }, { name?: string }>(
+      "/api/v1/user/games/:gameId/profiles",
+      async (ctx) => {
+        const name = ctx.postData?.name?.trim();
+        if (!name) return;
+
+        logger.debug("Intercepted create-profile request", ctx);
+        const profile = addNativeProfile(
+          Number(ctx.params.gameId),
+          this.key.userId,
+          name
+        );
+        ctx.block(profile);
+      }
+    );
+
+    this.interceptor.put<{ id: string }, { name?: string }>(
+      "/api/v1/user/profiles/:id",
+      async (ctx) => {
+        const id = Number(ctx.params.id);
+        if (!isNativeProfile(this.key.gameId, this.key.userId, id)) return;
+
+        const name = ctx.postData?.name?.trim();
+        if (!name) return;
+
+        logger.debug("Intercepted rename-profile request", ctx);
+        const profile = renameNativeProfile(
+          this.key.gameId,
+          this.key.userId,
+          id,
+          name
+        );
+        ctx.block(profile);
+      }
+    );
+
+    this.interceptor.delete<{ id: string }>(
+      "/api/v1/user/profiles/:id",
+      async (ctx) => {
+        const id = Number(ctx.params.id);
+        if (!isNativeProfile(this.key.gameId, this.key.userId, id)) return;
+
+        logger.debug("Intercepted delete-profile request", ctx);
+        removeNativeProfile(this.key.gameId, this.key.userId, id);
+        ctx.block();
+      }
+    );
+
+    this.interceptor.post<{ gameId: string }, { profile_id: number | null }>(
+      "/api/v1/user/games/:gameId/profiles/active",
+      async (ctx) => {
+        const profileId = ctx.postData?.profile_id ?? null;
+        if (
+          profileId !== null &&
+          !isNativeProfile(this.key.gameId, this.key.userId, profileId)
+        ) {
+          // Not one of our local profiles - a real one, or the default.
+          // Let the request go through to MapGenie's servers as normal.
+          return;
+        }
+
+        logger.debug("Intercepted switch-active-profile request", ctx);
+        if (window.user) {
+          window.user.activeProfileId = profileId;
+        }
+        ctx.block({});
       }
     );
   }
