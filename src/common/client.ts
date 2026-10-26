@@ -6,7 +6,7 @@ import {
   isNativeProfile,
   removeNativeProfile,
   renameNativeProfile,
-} from "@/common/mapgenie/nativeProfiles";
+} from "@/common/mapgenie";
 
 import backendService from "@/services/backend.service";
 import mapgenieService from "@/services/mapgenie.service";

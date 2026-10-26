@@ -6,8 +6,7 @@ import { activateBlockedMapgenieScript } from "@/common/mapgenie";
 import { mapDataUtils } from "@/common/mapgenie";
 import { waitForProperty } from "@/common/object";
 
-import { fixMapLinks } from "@/common/mapgenie";
-import { getNativeProfiles } from "@/common/mapgenie/nativeProfiles";
+import { fixMapLinks, getNativeProfiles } from "@/common/mapgenie";
 import { LazyGetter } from "lazy-get-decorator";
 
 export class MapPage extends Page {
