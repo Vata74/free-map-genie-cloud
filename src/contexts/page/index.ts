@@ -76,14 +76,12 @@ const fetchAccountName = async (id: number) => {
   }
 };
 
-const waitForPageUser = async (timeout = 10000) => {
+const waitForPageUserId = async (timeout = 10000) => {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     const user = window.user;
     const id = user?.realId ?? user?.id;
-    if (typeof id === "number" && id >= 0) {
-      return { id, name: await fetchAccountName(id) };
-    }
+    if (typeof id === "number" && id >= 0) return id;
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   return undefined;
@@ -96,10 +94,21 @@ const initializeBackendUserState = async (
     // Set auth token in backend service
     const auth = getAuthToken();
     await backend.setAuthToken(auth);
+    if (auth) {
+      await backend.updateUser();
+      return;
+    }
+
     // MapGenie no longer renders the auth-token meta tag, so the account is
-    // identified from the page's own window.user when it's available.
-    const pageUser = auth ? undefined : await waitForPageUser();
-    await backend.updateUser(pageUser);
+    // identified from the page's own window.user. The profile is saved right
+    // away (so the popup sees it as early as possible) and renamed once the
+    // account name has been read.
+    const id = await waitForPageUserId();
+    if (id === undefined) return;
+    await backend.updateUser({ id });
+
+    const name = await fetchAccountName(id);
+    if (name) await backend.updateUser({ id, name });
   } catch (err) {
     logger.debug(
       "Could not refresh MapGenie account profile; continuing with local FMG data.",

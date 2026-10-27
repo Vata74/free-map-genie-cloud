@@ -32,6 +32,26 @@ const openPopupFrame = async (page: Page, extensionId: string) => {
   return frame;
 };
 
+// Right after the page loads, the extension may not have saved the account
+// yet, and a popup that was already open doesn't refresh itself. So, like a
+// person would, close and reopen it a few times before calling it broken.
+const openPopupWhen = async (
+  page: Page,
+  extensionId: string,
+  tab: "profiles" | "data",
+  ready: (frame: ReturnType<Page["frameLocator"]>) => Promise<boolean>
+) => {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    await page.evaluate(() => document.getElementById("fmg-popup")?.remove());
+    const frame = await openPopupFrame(page, extensionId);
+    await frame.getByTitle(tab).click();
+    await page.waitForTimeout(1500);
+    if (await ready(frame).catch(() => false)) return frame;
+    await page.waitForTimeout(2500);
+  }
+  throw new Error(`The popup's ${tab} tab never became ready`);
+};
+
 const activeTab = (frame: ReturnType<Page["frameLocator"]>) =>
   frame.locator('[class*="tab-view-container"][class*="active"]');
 
@@ -93,20 +113,21 @@ test.describe("Extension features", () => {
 
   test("Popup recognises your account", async ({ page, extensionId }) => {
     await openMap(page);
-    const frame = await openPopupFrame(page, extensionId);
-    await frame.getByTitle("profiles").click();
-    await expect
-      .poll(() => activeTab(frame).textContent(), { timeout: 15000 })
-      .not.toContain("User not logged in");
+    const frame = await openPopupWhen(page, extensionId, "profiles", async (f) => {
+      const text = (await activeTab(f).textContent()) ?? "";
+      return /\S/.test(text) && !text.includes("User not logged in");
+    });
+    expect(await activeTab(frame).textContent()).not.toContain(
+      "User not logged in"
+    );
   });
 
   test("Popup shows your real account name", async ({ page, extensionId }) => {
     await openMap(page);
-    const frame = await openPopupFrame(page, extensionId);
-    await frame.getByTitle("profiles").click();
-    await expect
-      .poll(() => activeTab(frame).textContent(), { timeout: 15000 })
-      .toMatch(/\S/);
+    const frame = await openPopupWhen(page, extensionId, "profiles", async (f) => {
+      const text = (await activeTab(f).textContent()) ?? "";
+      return /\S/.test(text) && !text.includes("User not logged in");
+    });
     const text = (await activeTab(frame).textContent()) ?? "";
     expect(text).not.toContain("MapGenie account");
     expect(text).not.toContain("User not logged in");
@@ -114,8 +135,9 @@ test.describe("Extension features", () => {
 
   test("Data options are enabled in the popup", async ({ page, extensionId }) => {
     await openMap(page);
-    const frame = await openPopupFrame(page, extensionId);
-    await frame.getByTitle("data").click();
+    const frame = await openPopupWhen(page, extensionId, "data", (f) =>
+      f.getByRole("button", { name: "Import from Mapgenie account" }).isEnabled()
+    );
     for (const name of [
       "Open data manager",
       "Import from Mapgenie account",
@@ -151,8 +173,9 @@ test.describe("Extension features", () => {
         },
       })
     );
-    const frame = await openPopupFrame(page, extensionId);
-    await frame.getByTitle("data").click();
+    const frame = await openPopupWhen(page, extensionId, "data", (f) =>
+      f.getByRole("button", { name: "Import from Mapgenie account" }).isEnabled()
+    );
     await frame.getByRole("button", { name: "Import from Mapgenie account" }).click();
     await Promise.all([
       page.waitForEvent("load", { timeout: 30000 }),
