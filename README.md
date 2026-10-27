@@ -19,10 +19,10 @@ Updated automatically after each daily run against the real mapgenie.io, so you 
 | Map loads with the extension running | ✅ Pass |
 | Pro features are unlocked | ✅ Pass |
 | Marking a location saves it locally | ✅ Pass |
-| Popup recognises your account | ✅ Pass |
-| Popup shows your real account name | ✅ Pass |
+| Popup recognises your account | ✅ Pass (flaky) |
+| Popup shows your real account name | ✅ Pass (flaky) |
 | Data options are enabled in the popup | ✅ Pass |
-| Import from MapGenie account brings your marks in | ✅ Pass |
+| Import from MapGenie account brings your marks in | ✅ Pass (flaky) |
 | Map profiles can be created, renamed and deleted | ✅ Pass |
 | Each map profile keeps its own progress | ✅ Pass |
 | Old saved data (FMG v1) migrates correctly on mapgenie.io | ✅ Pass |
