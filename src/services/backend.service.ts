@@ -112,9 +112,18 @@ class BackendService {
     await this.migrator.migrate(domain, key);
   }
 
-  public async updateUser() {
+  public async updateUser(pageUser?: { id: number }) {
     if (!this.isLoggedIn()) {
-      await this.database.profiles.deleteUser();
+      // Without a token the account can't be looked up, but the id the page
+      // itself reports is enough to keep a local profile for it. With
+      // neither, leave whatever is stored alone: we can't tell logged out
+      // from a page that just doesn't expose the user.
+      if (pageUser) {
+        const existing = await this.database.profiles.getUser();
+        const name =
+          existing?.id === pageUser.id ? existing.name : "MapGenie account";
+        await this.database.profiles.replaceUser(pageUser.id, name);
+      }
       return;
     }
 

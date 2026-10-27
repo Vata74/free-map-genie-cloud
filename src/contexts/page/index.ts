@@ -50,6 +50,17 @@ const checkReload = () => {
   }
 };
 
+const waitForPageUser = async (timeout = 10000) => {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const user = window.user;
+    const id = user?.realId ?? user?.id;
+    if (typeof id === "number" && id >= 0) return { id };
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  return undefined;
+};
+
 const initializeBackendUserState = async (
   backend: backendService.Instance
 ) => {
@@ -57,7 +68,10 @@ const initializeBackendUserState = async (
     // Set auth token in backend service
     const auth = getAuthToken();
     await backend.setAuthToken(auth);
-    await backend.updateUser();
+    // MapGenie no longer renders the auth-token meta tag, so the account is
+    // identified from the page's own window.user when it's available.
+    const pageUser = auth ? undefined : await waitForPageUser();
+    await backend.updateUser(pageUser);
   } catch (err) {
     logger.debug(
       "Could not refresh MapGenie account profile; continuing with local FMG data.",
