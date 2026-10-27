@@ -126,7 +126,11 @@ test.describe("Extension features", () => {
     await openMap(page);
     const frame = await openPopupWhen(page, extensionId, "profiles", async (f) => {
       const text = (await activeTab(f).textContent()) ?? "";
-      return /\S/.test(text) && !text.includes("User not logged in");
+      return (
+        /\S/.test(text) &&
+        !text.includes("User not logged in") &&
+        !text.includes("MapGenie account")
+      );
     });
     const text = (await activeTab(frame).textContent()) ?? "";
     expect(text).not.toContain("MapGenie account");
