@@ -7,6 +7,38 @@ Browser extension that unlocks MapGenie Pro features for free, with an added clo
 
 Two separate daily checks against the real mapgenie.io site, on purpose: **MapGenie compatibility** is "does the extension itself still work" (map loading, marking locations, the stuff everyone needs) - if that's red, something's actually broken. **Cloud sync** is just the Firebase backup layer - if only that one's red, the extension still works fine, you'd just want to hold off relying on cloud backup until it's green again.
 
+## Status
+
+Updated automatically after each daily run against the real mapgenie.io, so you can see what works and what doesn't right now.
+
+### Extension
+
+<!-- status:compat:start -->
+| Check | Status |
+| --- | --- |
+| Map loads with the extension running | ✅ Pass |
+| Pro features are unlocked | ✅ Pass |
+| Marking a location saves it locally | ✅ Pass |
+| Popup recognises your account | ✅ Pass |
+| Popup shows your real account name | ✅ Pass |
+| Data options are enabled in the popup | ✅ Pass |
+| Import from MapGenie account brings your marks in | ✅ Pass |
+| Map profiles can be created, renamed and deleted | ✅ Pass |
+| Each map profile keeps its own progress | ✅ Pass |
+| Old saved data (FMG v1) migrates correctly on mapgenie.io | ✅ Pass |
+| Old saved data (FMG v2) migrates correctly on mapgenie.io | ✅ Pass |
+| Old saved data (FMG v1) migrates correctly on rdr2map.com | ✅ Pass |
+| Old saved data (FMG v2) migrates correctly on rdr2map.com | ✅ Pass |
+<!-- status:compat:end -->
+
+### Cloud backup
+
+<!-- status:cloud:start -->
+| Check | Status |
+| --- | --- |
+| Pushes a locally marked location to Firestore on sign-up | ✅ Pass |
+<!-- status:cloud:end -->
+
 This is a fork of [NR2BJ/free-map-genie](https://github.com/NR2BJ/free-map-genie), the actively maintained fork that keeps up with MapGenie's site changes. NR2BJ's fork is itself based on the original [V1P3R-FMG/free-map-genie](https://github.com/V1P3R-FMG/free-map-genie), created by [MrFusiion](https://github.com/MrFusiion). See [Credits](#credits).
 
 ## Screenshots

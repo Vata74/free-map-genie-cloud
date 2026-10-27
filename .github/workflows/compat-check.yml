@@ -13,9 +13,12 @@ on:
 jobs:
   compat-check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # to commit the README status table
     timeout-minutes: 25
 
     env:
+      PLAYWRIGHT_JSON_OUTPUT_NAME: ci-results/compat.json
       MG_EMAIL: ${{ secrets.MG_EMAIL }}
       MG_PASSWORD: ${{ secrets.MG_PASSWORD }}
 
@@ -50,4 +53,19 @@ jobs:
           timeout_minutes: 10
           max_attempts: 4
           retry_wait_seconds: 30
-          command: npx playwright test --project=chromium e2e/tests/migration.spec.ts
+          command: npx playwright test --project=chromium e2e/tests/migration.spec.ts e2e/tests/features.spec.ts --reporter=list,json
+
+      # Runs even when the tests failed, that's the point: the README table
+      # should show which check broke.
+      - name: Update the README status table
+        if: always()
+        run: |
+          node scripts/update-readme-status.mjs ci-results/compat.json compat
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if ! git diff --cached --quiet; then
+            git commit -m "docs: update CI status table [skip ci]"
+            git pull --rebase
+            git push
+          fi

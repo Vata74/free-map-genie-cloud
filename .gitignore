@@ -36,3 +36,4 @@ research/
 
 # Extension signing key (pins the dev extension ID for OAuth), never commit
 .secrets/
+ci-results/
