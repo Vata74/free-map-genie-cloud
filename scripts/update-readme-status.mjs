@@ -58,7 +58,7 @@ const lines = [
   "| --- | --- |",
   ...rows
     .filter((r) => !/user authentication/.test(r.name))
-    .map((r) => `| ${tidy(r.name)} | ${icon[r.status]}${r.flaky ? " (flaky)" : ""} |`),
+    .map((r) => `| ${tidy(r.name)} | ${icon[r.status]} |`),
 ];
 
 const start = `<!-- status:${section}:start -->`;
