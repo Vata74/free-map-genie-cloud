@@ -83,10 +83,19 @@ class MapgenieService {
 
   @Memoize()
   public async fetchMap(mapId: number | string) {
-    const { data } = await this.axios.get<MG.Api.MapFull>(
-      `/maps/${mapId}/full`
+    // MapGenie removed `/maps/{id}/full` (404). The same data, groups with
+    // their categories and locations plus the tile config, is part of the
+    // game's `/games/{id}/full` response, so take the map from there.
+    const { data: info } = await this.axios.get<{ game_id: number }>(
+      `/maps/${mapId}`
     );
-    return data;
+    const game = await this.fetchGame(info.game_id);
+    const map = game.maps.find((m) => String(m.id) === String(mapId));
+    if (!map?.groups) {
+      throw new Error(`Map with ID "${mapId}" not found in game ${game.id}`);
+    }
+    const { maps: _maps, ...gameInfo } = game;
+    return { ...map, game: map.game ?? (gameInfo as MG.Api.Game) };
   }
 
   @Memoize()

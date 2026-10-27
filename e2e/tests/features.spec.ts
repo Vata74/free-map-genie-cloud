@@ -86,6 +86,21 @@ test.describe("Extension features", () => {
     expect(state).toEqual({ user: true, map: true });
   });
 
+  test("Pro maps load their locations", async ({ page }) => {
+    // Customs (map 67) is opened through the factory page the way the
+    // extension's unlocked map links do it.
+    await page.goto("https://mapgenie.io/tarkov/maps/factory?fmgMapId=67");
+    await page.waitForFunction(() => window.mapData?.map?.id === 67, undefined, {
+      timeout: 30000,
+    });
+    const state = await page.evaluate(() => ({
+      locations: window.mapData!.locations.length,
+      categories: Object.keys(window.mapData!.categories).length,
+    }));
+    expect(state.locations).toBeGreaterThan(100);
+    expect(state.categories).toBeGreaterThan(5);
+  });
+
   test("Pro features are unlocked", async ({ page }) => {
     await openMap(page);
     const state = await page.evaluate(() => ({
