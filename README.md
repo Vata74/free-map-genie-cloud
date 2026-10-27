@@ -20,7 +20,7 @@ Updated automatically after each daily run against the real mapgenie.io, so you 
 | Pro features are unlocked | ✅ Pass |
 | Marking a location saves it locally | ✅ Pass |
 | Popup recognises your account | ✅ Pass |
-| Popup shows your real account name | ✅ Pass (flaky) |
+| Popup shows your real account name | ✅ Pass |
 | Data options are enabled in the popup | ✅ Pass |
 | Import from MapGenie account brings your marks in | ✅ Pass |
 | Map profiles can be created, renamed and deleted | ✅ Pass |
