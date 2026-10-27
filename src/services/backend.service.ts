@@ -88,9 +88,9 @@ class BackendService {
     setAuthToken(token);
   }
 
-  public isLoggedIn() {
-    const authToken = this.getAuthToken();
-    return !!authToken;
+  public async isLoggedIn() {
+    if (this.getAuthToken()) return true;
+    return (await this.database.profiles.getUser()) !== null;
   }
 
   public storageEstimate() {
@@ -112,8 +112,8 @@ class BackendService {
     await this.migrator.migrate(domain, key);
   }
 
-  public async updateUser(pageUser?: { id: number }) {
-    if (!this.isLoggedIn()) {
+  public async updateUser(pageUser?: { id: number; name?: string }) {
+    if (!this.getAuthToken()) {
       // Without a token the account can't be looked up, but the id the page
       // itself reports is enough to keep a local profile for it. With
       // neither, leave whatever is stored alone: we can't tell logged out
@@ -121,7 +121,8 @@ class BackendService {
       if (pageUser) {
         const existing = await this.database.profiles.getUser();
         const name =
-          existing?.id === pageUser.id ? existing.name : "MapGenie account";
+          pageUser.name ??
+          (existing?.id === pageUser.id ? existing.name : "MapGenie account");
         await this.database.profiles.replaceUser(pageUser.id, name);
       }
       return;
@@ -132,13 +133,21 @@ class BackendService {
     await this.database.profiles.replaceUser(userData.id, userData.username);
   }
 
-  public async importFromMapgenieAccount(key: Key) {
-    if (!this.isLoggedIn()) {
-      throw new Error("User is not logged in");
+  public async importAccountData(
+    key: Key,
+    data: {
+      locations: number[];
+      trackedCategoryIds: number[];
+      notes: MG.Note[];
     }
-
-    const user = await this.mapgenie.fetchUser(key.gameId);
-    await this.database.importMapgenie(key, user);
+  ) {
+    await this.database.setData(key, {
+      locations: Object.fromEntries(data.locations.map((id) => [id, true])),
+      trackedCategoryIds: data.trackedCategoryIds,
+      notes: data.notes,
+      presetOrdering: [],
+      presets: [],
+    });
     this.cloudSync.schedulePush(key);
   }
 

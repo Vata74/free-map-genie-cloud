@@ -161,22 +161,6 @@ export class DexieDatabase implements Database {
     );
   }
 
-  public async importMapgenie(key: Key, user: MG.Api.UserFull) {
-    const locations = Object.fromEntries(
-      user.locations.map((locId) => [locId, true])
-    );
-    const trackedCategoryIds = user.tracked_category_ids;
-    const notes = user.notes;
-
-    await this.setData(key, {
-      locations,
-      trackedCategoryIds,
-      notes,
-      presetOrdering: [],
-      presets: [],
-    });
-  }
-
   public async export(userId: number, gameId?: number) {
     return this.exportHelper.export(userId, gameId);
   }

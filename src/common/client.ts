@@ -166,7 +166,31 @@ export class Client {
   }
 
   public async importFromMapgenieAccount() {
-    await this.backend.importFromMapgenieAccount(this.key);
+    const game = await this.mapgenie.fetchGame(this.key.gameId);
+    const axios = await waitForProperty(window, "axios");
+
+    const locations = new Set<number>();
+    const tracked = new Set<number>();
+    const notes = new Map<string, MG.Note>();
+
+    for (const map of game.maps) {
+      const { data } = await axios!.get(`/api/v1/user/map-data/${map.id}`, {
+        headers: { "X-Map-ID": String(map.id) },
+      });
+      const found: unknown = data.locations;
+      const ids = Array.isArray(found)
+        ? found
+        : Object.keys(found ?? {}).filter((id) => (found as any)[id]);
+      ids.forEach((id: number | string) => locations.add(Number(id)));
+      (data.trackedCategoryIds ?? []).forEach((id: number) => tracked.add(id));
+      (data.notes ?? []).forEach((note: MG.Note) => notes.set(note.id, note));
+    }
+
+    await this.backend.importAccountData(this.key, {
+      locations: [...locations],
+      trackedCategoryIds: [...tracked],
+      notes: [...notes.values()],
+    });
   }
 
   public async clearGame() {

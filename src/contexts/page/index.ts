@@ -50,12 +50,40 @@ const checkReload = () => {
   }
 };
 
+const fetchAccountName = async (id: number) => {
+  const cacheKey = `fmg:account-name:${id}`;
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) return cached;
+
+    let href: string | undefined;
+    for (let i = 0; i < 40 && !href; i++) {
+      href = document.querySelector<HTMLAnchorElement>('a[href$="/account"]')
+        ?.href;
+      if (!href) await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    if (!href) return undefined;
+
+    const res = await fetch(href, { credentials: "same-origin" });
+    if (!res.ok) return undefined;
+
+    const doc = new DOMParser().parseFromString(await res.text(), "text/html");
+    const name = doc.querySelector(".account-profile-name")?.textContent?.trim();
+    if (name) localStorage.setItem(cacheKey, name);
+    return name || undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 const waitForPageUser = async (timeout = 10000) => {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     const user = window.user;
     const id = user?.realId ?? user?.id;
-    if (typeof id === "number" && id >= 0) return { id };
+    if (typeof id === "number" && id >= 0) {
+      return { id, name: await fetchAccountName(id) };
+    }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   return undefined;
