@@ -33,7 +33,7 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Unit tests (map.js compatibility layer)
-        run: node --test tests/map-compat.test.mjs
+        run: node --test tests/*.test.mjs
 
       - name: Build the extension
         run: npm run build
