@@ -40,7 +40,19 @@ const tidy = (name) =>
     .replace(/^It should /, "")
     .replace(/^./, (c) => c.toUpperCase());
 
-const icon = { pass: "✅ Pass", fail: "❌ Fail", skipped: "⏭️ Skipped" };
+// When the shared login fails, every other test is skipped without ever
+// running. Showing those as "skipped" would read like nothing is wrong.
+const loginFailed = rows.some(
+  (r) => /user authentication/.test(r.name) && r.status === "fail"
+);
+if (loginFailed) {
+  for (const r of rows) {
+    if (r.status === "skipped") r.status = "blocked";
+  }
+}
+
+const icon = {
+  blocked: "❌ Not run (could not log in to MapGenie)", pass: "✅ Pass", fail: "❌ Fail", skipped: "⏭️ Skipped" };
 const lines = [
   "| Check | Status |",
   "| --- | --- |",

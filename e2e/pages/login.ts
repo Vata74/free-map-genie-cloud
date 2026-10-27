@@ -58,21 +58,21 @@ export class LoginPage {
     if (!this.loginPage) {
       throw new Error("Login page is not initialized");
     }
-    return this.loginPage.getByRole("textbox", { name: "E-Mail Address" });
+    return this.loginPage.locator('input[type="email"], input[name="email"]').first();
   }
 
   public get passwordInput() {
     if (!this.loginPage) {
       throw new Error("Login page is not initialized");
     }
-    return this.loginPage.getByRole("textbox", { name: "Password" });
+    return this.loginPage.locator('input[type="password"]').first();
   }
 
   public get submitButton() {
     if (!this.loginPage) {
       throw new Error("Login page is not initialized");
     }
-    return this.loginPage.getByRole("button", { name: "Login" });
+    return this.loginPage.getByRole("button", { name: /log\s?in/i });
   }
 
   public cookies() {
