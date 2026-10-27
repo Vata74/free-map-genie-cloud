@@ -21,7 +21,8 @@ gh release create vX.Y.Z-cloud --repo Vata74/free-map-genie-cloud --target main 
   .output/fmg-X.Y.Z-chrome.zip .output/fmg-X.Y.Z-firefox.zip
 ```
 
-6. Give the user the release link.
+6. Publishing the release starts `.github/workflows/sign-firefox.yml`, which gets the Firefox zip signed by Mozilla (unlisted, self-distributed) and attaches `fmg-X.Y.Z-firefox.xpi` to the same release, usually within a few minutes. Check it with `gh run list --workflow sign-firefox.yml --repo Vata74/free-map-genie-cloud --limit 1`. It needs the `AMO_JWT_ISSUER` and `AMO_JWT_SECRET` repository secrets. Mozilla signs each version only once, so a failed release that needs a new zip also needs a new version number. To sign an older release: `gh workflow run sign-firefox.yml --repo Vata74/free-map-genie-cloud -f tag=vX.Y.Z-cloud`.
+7. Give the user the release link.
 
 ## Release notes format (always exactly this)
 
@@ -39,8 +40,11 @@ Three sections, in this order, with these headings. Plain language written for u
 ## Downloads
 
 - `fmg-X.Y.Z-chrome.zip` — Chrome, Edge, Brave, and Kiwi Browser (Android). Load unpacked via Developer mode.
-- `fmg-X.Y.Z-firefox.zip` — Firefox. Still not signed, only loads temporarily via `about:debugging`.
+- `fmg-X.Y.Z-firefox.xpi` — Firefox, signed by Mozilla. Open it in Firefox to install it permanently.
+- `fmg-X.Y.Z-firefox.zip` — Firefox, unsigned. Only loads temporarily via `about:debugging`.
 ```
+
+The `.xpi` line assumes the signing workflow worked. If it failed, leave the `.xpi` line out until it is attached.
 
 Rules:
 

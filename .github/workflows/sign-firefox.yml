@@ -1,0 +1,63 @@
+name: Sign Firefox build
+
+# Firefox only keeps an extension installed if Mozilla signed it. This takes
+# the Firefox zip attached to a release, has Mozilla sign it as a
+# self-distributed (unlisted) add-on, and attaches the signed .xpi to the same
+# release. Signing the zip that was released, instead of building again here,
+# keeps both downloads byte-for-byte the same extension.
+#
+# Needs two repository secrets from addons.mozilla.org > Developer Hub >
+# Manage API Keys: AMO_JWT_ISSUER and AMO_JWT_SECRET.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to sign (for example v3.0.17-cloud)"
+        required: true
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to attach the .xpi to the release
+    timeout-minutes: 30
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Download the Firefox zip from the release
+        run: |
+          mkdir dist
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "fmg-*-firefox.zip" --dir dist
+          zip=$(ls dist/fmg-*-firefox.zip)
+          echo "ZIP=$zip" >> "$GITHUB_ENV"
+          echo "XPI=${zip%.zip}.xpi" >> "$GITHUB_ENV"
+          mkdir ext
+          unzip -q "$zip" -d ext
+
+      # Mozilla's automatic review usually takes a few minutes. web-ext waits
+      # for it and downloads the signed file into signed/.
+      - name: Sign with Mozilla
+        run: |
+          npx --yes web-ext@8 sign \
+            --source-dir ext \
+            --artifacts-dir signed \
+            --channel unlisted \
+            --api-key "${{ secrets.AMO_JWT_ISSUER }}" \
+            --api-secret "${{ secrets.AMO_JWT_SECRET }}" \
+            --approval-timeout 1500000
+
+      - name: Attach the signed .xpi to the release
+        run: |
+          cp signed/*.xpi "$XPI"
+          gh release upload "$TAG" "$XPI" --repo "$GITHUB_REPOSITORY" --clobber
