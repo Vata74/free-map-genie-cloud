@@ -86,9 +86,33 @@ test.describe("Extension features", () => {
     expect(state).toEqual({ user: true, map: true });
   });
 
-  test("Pro maps load their locations", async ({ page }) => {
-    // Customs (map 67) is opened through the factory page the way the
-    // extension's unlocked map links do it.
+  test("Locked map links are unlocked on a map page", async ({ page }) => {
+    await openMap(page);
+    // The links that point to the upgrade page for a free account have to be
+    // turned into real map links, otherwise clicking one shows the paywall.
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll("#left-sidebar a.map-link").length > 0 &&
+        ![...document.querySelectorAll("#left-sidebar a.map-link")].some((a) =>
+          (a as HTMLAnchorElement).href.endsWith("/upgrade")
+        ),
+      undefined,
+      { timeout: 15000 }
+    );
+    const unlocked = await page.evaluate(
+      () =>
+        [...document.querySelectorAll("#left-sidebar a.map-link")].filter((a) =>
+          (a as HTMLAnchorElement).href.includes("fmgMapId=")
+        ).length
+    );
+    expect(unlocked).toBeGreaterThan(0);
+  });
+
+  test("A map opened through an unlocked link loads its locations", async ({
+    page,
+  }) => {
+    // Customs (map 67), opened through the factory page the way the unlocked
+    // map links do it.
     await page.goto("https://mapgenie.io/tarkov/maps/factory?fmgMapId=67");
     await page.waitForFunction(() => window.mapData?.map?.id === 67, undefined, {
       timeout: 30000,

@@ -94,8 +94,8 @@ class MapgenieService {
     if (!map?.groups) {
       throw new Error(`Map with ID "${mapId}" not found in game ${game.id}`);
     }
-    const { maps: _maps, ...gameInfo } = game;
-    return { ...map, game: map.game ?? (gameInfo as MG.Api.Game) };
+    // Keep the game's own `maps`: the map links fixer reads them off `game`.
+    return { ...map, game: map.game ?? game };
   }
 
   @Memoize()
