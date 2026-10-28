@@ -17,6 +17,12 @@ Updated automatically after each daily run against the real mapgenie.io, so you 
 | Check | Status |
 | --- | --- |
 | Map loads with the extension running | ✅ Pass |
+| Pro maps load their locations | ✅ Pass |
+| MapGenie API: games list is available | ✅ Pass |
+| MapGenie API: full game data is available | ✅ Pass |
+| MapGenie API: map info is available | ✅ Pass |
+| MapGenie API: heatmaps endpoint still exists | ✅ Pass |
+| MapGenie API: your account's map data is available | ✅ Pass |
 | Pro features are unlocked | ✅ Pass |
 | Marking a location saves it locally | ✅ Pass |
 | Popup recognises your account | ✅ Pass |
