@@ -101,6 +101,66 @@ test.describe("Extension features", () => {
     expect(state.categories).toBeGreaterThan(5);
   });
 
+  // The extension depends on a few MapGenie endpoints. If one is renamed or
+  // removed the extension degrades quietly, so each one gets its own check.
+  const apiStatus = (page: Page, path: string) =>
+    page.evaluate(async (p) => (await fetch(`/api/v1${p}`)).status, path);
+
+  test("MapGenie API: games list is available", async ({ page }) => {
+    await openMap(page);
+    expect(await apiStatus(page, "/games")).toBe(200);
+  });
+
+  test("MapGenie API: full game data is available", async ({ page }) => {
+    const mapPage = await openMap(page);
+    const gameId = await mapPage.getGameId();
+    const data = await page.evaluate(async (id) => {
+      const res = await fetch(`/api/v1/games/${id}/full`);
+      const game = res.ok ? await res.json() : null;
+      const map = game?.maps?.[0];
+      return {
+        status: res.status,
+        locations: (map?.groups ?? [])
+          .flatMap((g: any) => g.categories)
+          .reduce((n: number, c: any) => n + (c.locations?.length ?? 0), 0),
+        tiles: map?.config?.tile_sets?.length ?? 0,
+      };
+    }, gameId);
+    expect(data.status).toBe(200);
+    expect(data.locations).toBeGreaterThan(0);
+    expect(data.tiles).toBeGreaterThan(0);
+  });
+
+  test("MapGenie API: map info is available", async ({ page }) => {
+    await openMap(page);
+    const mapId = await page.evaluate(() => window.mapData!.map.id);
+    expect(await apiStatus(page, `/maps/${mapId}`)).toBe(200);
+  });
+
+  test("MapGenie API: heatmaps endpoint still exists", async ({ page }) => {
+    await openMap(page);
+    const mapId = await page.evaluate(() => window.mapData!.map.id);
+    // 403 is normal for a free account. 404 means it was removed.
+    expect([200, 403]).toContain(await apiStatus(page, `/maps/${mapId}/heatmaps`));
+  });
+
+  test("MapGenie API: your account's map data is available", async ({ page }) => {
+    await openMap(page);
+    const mapId = await page.evaluate(() => window.mapData!.map.id);
+    const data = await page.evaluate(async (id) => {
+      const res = await fetch(`/api/v1/user/map-data/${id}`, {
+        headers: { "X-Map-ID": String(id) },
+      });
+      const body = res.ok ? await res.json() : null;
+      return {
+        status: res.status,
+        shape: !!body && "locations" in body && "notes" in body,
+      };
+    }, mapId);
+    expect(data.status).toBe(200);
+    expect(data.shape).toBe(true);
+  });
+
   test("Pro features are unlocked", async ({ page }) => {
     await openMap(page);
     const state = await page.evaluate(() => ({
