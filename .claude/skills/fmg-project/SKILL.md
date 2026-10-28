@@ -39,6 +39,8 @@ Remotes: `fork` is `Vata74/free-map-genie-cloud` (ours), `nr2bj` is upstream. Th
 - The `meta[name="auth-token"]` tag disappeared, so the Bearer-token API (`/api/v1/user/full`) is unusable. The account is now identified from `window.user`, the name is read from the `/account` page (`.account-profile-name`), and "Import from MapGenie account" reads `GET /api/v1/user/map-data/{mapId}` for each map using the normal session.
 - The login form changed (labels, password field type, button text "Log In"). `e2e/pages/login.ts` uses attribute selectors now.
 - Pro-only server checks cannot be bypassed from the client (creating a map profile returned 402). Those need request interception.
+- `/maps/{id}/full` was removed (404, October 2026). `fetchMap` now takes the map out of `/games/{id}/full`, keeping the game's `maps` because `fixMapLinks` reads them.
+- Truly Pro maps (in Tarkov: Reserve, Lighthouse, Streets, Ground Zero, Icebreaker; `premium: true`) come with zero locations for free accounts from every endpoint (`/maps/{id}/data`, `/games/{id}/full`, the map page itself, which shows the paywall). The extension can unlock their links but cannot show their markers. Free maps like Customs are not a valid test for Pro maps.
 
 ## CI
 
