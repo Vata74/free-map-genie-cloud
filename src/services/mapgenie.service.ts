@@ -1,5 +1,6 @@
 import axios from "axios";
 import { setupCache } from "axios-cache-interceptor";
+import { selectMapFromGame } from "@/common/mapgenie/mapResponse";
 
 import { createService, Memoize, type ProxiedObject } from "@/common/messaging";
 
@@ -61,7 +62,8 @@ class MapgenieService {
   public async fetchGame(gameId: number | string): Promise<MG.Api.GameFull> {
     try {
       const { data } = await this.axios.get<MG.Api.GameFull>(
-        `/games/${gameId}/full`
+        `/games/${gameId}/full`,
+        { timeout: 20000 }
       );
       return data;
     } catch (error) {
@@ -83,19 +85,19 @@ class MapgenieService {
 
   @Memoize()
   public async fetchMap(mapId: number | string) {
-    // MapGenie removed `/maps/{id}/full` (404). The same data, groups with
-    // their categories and locations plus the tile config, is part of the
-    // game's `/games/{id}/full` response, so take the map from there.
-    const { data: info } = await this.axios.get<{ game_id: number }>(
-      `/maps/${mapId}`
-    );
-    const game = await this.fetchGame(info.game_id);
-    const map = game.maps.find((m) => String(m.id) === String(mapId));
-    if (!map?.groups) {
-      throw new Error(`Map with ID "${mapId}" not found in game ${game.id}`);
+    const id = Number(mapId);
+    if (!Number.isSafeInteger(id) || id <= 0) {
+      throw new Error("Invalid map ID.");
     }
-    // Keep the game's own `maps`: the map links fixer reads them off `game`.
-    return { ...map, game: map.game ?? game };
+    const { data: info } = await this.axios.get<MG.Api.Map>(
+      `/maps/${id}`,
+      { timeout: 15000 }
+    );
+    if (info?.id !== id || !Number.isSafeInteger(info.game_id) || info.game_id <= 0) {
+      throw new Error(`Invalid metadata for map ${id}.`);
+    }
+    const game = await this.fetchGame(info.game_id);
+    return selectMapFromGame(game, info.game_id, id);
   }
 
   @Memoize()

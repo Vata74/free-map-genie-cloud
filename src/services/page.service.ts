@@ -130,7 +130,7 @@ export class PageService {
     return {
       ...bookmark,
       pageType: pageType,
-      createdAt: Date.now(),
+      createdAt: new Date().toISOString(),
     };
   }
 

@@ -12,6 +12,8 @@ import {
   getActiveNativeProfileId,
 } from "@/common/mapgenie";
 import { LazyGetter } from "lazy-get-decorator";
+import { showMapLoadError } from "@/common/mapgenie/mapLoadError";
+import { prepareMapDataResponseOverride } from "@/common/mapgenie/mapDataResponse";
 
 export class MapPage extends Page {
   private client = new Client();
@@ -118,14 +120,11 @@ export class MapPage extends Page {
       pageLocations.map((loc) => [loc.id, loc])
     );
 
-    const filteredLocations =
-      pageLocations.length > 0
-        ? Object.fromEntries(
-            Object.keys(data.locations)
-              .filter((id) => !!locationsById[id])
-              .map((id) => [id, true])
-          )
-        : data.locations;
+    const filteredLocations = Object.fromEntries(
+      Object.keys(data.locations)
+        .filter((id) => data.locations[Number(id)] && !!locationsById[id])
+        .map((id) => [id, true])
+    );
 
     const filteredNotes = data.notes.filter(
       (note) => note.map_id === window.mapData!.map.id
@@ -336,12 +335,21 @@ export class MapPage extends Page {
   @LazyGetter()
   private get fmgMapId() {
     const urlParams = new URLSearchParams(window.location.search);
-    const mapIdParmam = urlParams.get("fmgMapId") ?? undefined;
-    return mapIdParmam ? Number(mapIdParmam) : null;
+    const value = urlParams.get("fmgMapId");
+    if (value === null) return null;
+    const mapId = Number(value);
+    if (!Number.isSafeInteger(mapId) || mapId <= 0) {
+      throw new Error("Invalid requested map ID.");
+    }
+    return mapId;
   }
 
   private async loadMapDataForMapId(mapId: number) {
     const map = await this.client.mapgenie.fetchMap(mapId);
+    const gameId = window.game?.id ?? window.mapData?.map.game_id;
+    if (map.id !== mapId || map.game_id !== gameId) {
+      throw new Error("Requested map does not belong to this game's page.");
+    }
     mapDataUtils.loadMapData(map, {
       preserveMapConfig: mapId === window.mapData?.map.id,
       swapTileCoordinates: mapDataUtils.getStoredTileCoordinateSwap(
@@ -349,6 +357,7 @@ export class MapPage extends Page {
         map.id
       ),
     });
+    prepareMapDataResponseOverride(mapId, window.mapData!.locations);
   }
 
   private async loadMapData() {
@@ -375,11 +384,16 @@ export class MapPage extends Page {
 
   private async loadRemoteMapData() {
     try {
-      // If MapGenie's data API blocks a request, still boot the page's own map.
       await this.loadMapData();
+    } catch (err) {
+      // Never label the original page's map as a successfully loaded target.
+      showMapLoadError();
+      throw err;
+    }
+    try {
       await this.loadHeatmaps();
     } catch (err) {
-      logger.error("Failed to load pro map data, loading map anyway.", err);
+      logger.warn("Could not load optional heatmaps; continuing with the requested map.", err);
     }
   }
 
