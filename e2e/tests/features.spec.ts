@@ -3,9 +3,17 @@ import { expect, type Page } from "@playwright/test";
 import { test } from "../helpers/fixtures";
 import { MapPage } from "../pages/map";
 
-// Fake ids, never shown on any real map. Large enough not to collide with a
-// real MapGenie location.
-const MARK_ID = 999999902;
+// A real Factory location (a poster). It has to exist on the map: saved marks
+// for locations that aren't on the map are not shown.
+const MARK_ID = 939360;
+
+// The map's markers (and so the restored marks) arrive a moment after the
+// page loads, so wait for the mark instead of checking once.
+const markShown = (page: Page) =>
+  expect.poll(
+    () => page.evaluate((id) => !!window.user?.locations?.[id], MARK_ID),
+    { timeout: 20000 }
+  );
 
 const openMap = async (page: Page) => {
   const mapPage = new MapPage(page);
@@ -108,21 +116,62 @@ test.describe("Extension features", () => {
     expect(unlocked).toBeGreaterThan(0);
   });
 
-  test("A map opened through an unlocked link loads its locations", async ({
-    page,
-  }) => {
-    // Customs (map 67), opened through the factory page the way the unlocked
-    // map links do it.
-    await page.goto("https://mapgenie.io/tarkov/maps/factory?fmgMapId=67");
-    await page.waitForFunction(() => window.mapData?.map?.id === 67, undefined, {
+  test("Pro maps show their markers", async ({ page }) => {
+    // Reserve (map 75) is a real Pro map. MapGenie's own first data request
+    // comes back empty for a free account, so this only passes while the
+    // extension keeps the markers it loaded (fix from NR2BJ's 3.0.14).
+    await page.goto("https://mapgenie.io/tarkov/maps/factory?fmgMapId=75");
+    await page.waitForFunction(() => window.mapData?.map?.id === 75, undefined, {
       timeout: 30000,
     });
-    const state = await page.evaluate(() => ({
-      locations: window.mapData!.locations.length,
-      categories: Object.keys(window.mapData!.categories).length,
-    }));
-    expect(state.locations).toBeGreaterThan(100);
-    expect(state.categories).toBeGreaterThan(5);
+    await expect
+      .poll(() => page.evaluate(() => window.mapData!.locations.length), {
+        timeout: 20000,
+      })
+      .toBeGreaterThan(100);
+  });
+
+  test("Guide checklists track more than 100 items", async ({ page }) => {
+    test.setTimeout(180000);
+    const checked = () =>
+      page.evaluate(
+        () => document.querySelectorAll("input[type=checkbox]:checked").length
+      );
+    // Click boxes one at a time, at a human pace (the guide saves every
+    // click), until `target` boxes are checked. Some quests appear twice and
+    // both boxes toggle together, so the next box is picked after each click.
+    const checkUntil = (target: number) =>
+      page.evaluate(async (target) => {
+        const boxes = () => [
+          ...document.querySelectorAll<HTMLInputElement>("input[type=checkbox]"),
+        ];
+        const want = (b: HTMLInputElement) =>
+          target === 0 ? b.checked : !b.checked;
+        for (let i = 0; i < 1000; i++) {
+          const count = boxes().filter((b) => b.checked).length;
+          if (target === 0 ? count === 0 : count >= target) return;
+          boxes().find(want)?.click();
+          await new Promise((r) => setTimeout(r, 250));
+        }
+      }, target);
+
+    await page.goto("https://mapgenie.io/escape-from-duckov/guides/quests");
+    await expect
+      .poll(() => page.locator("input[type=checkbox]").count(), { timeout: 20000 })
+      .toBeGreaterThan(105);
+    await checkUntil(0);
+    await checkUntil(105);
+    expect(
+      await page.evaluate(() => /pro subscription/i.test(document.body.innerText))
+    ).toBe(false);
+
+    // Give the last saves a moment to land before reloading.
+    await page.waitForTimeout(3000);
+    await page.reload();
+    await expect.poll(checked, { timeout: 20000 }).toBeGreaterThanOrEqual(105);
+
+    // Leave the test account clean for the next run.
+    await checkUntil(0);
   });
 
   // The extension depends on a few MapGenie endpoints. If one is renamed or
@@ -203,11 +252,7 @@ test.describe("Extension features", () => {
     await page.reload();
     await mapPage.waitForAxiosInterceptor();
     await mapPage.waitForUserDataLoaded();
-    const saved = await page.evaluate(
-      (id) => !!window.user?.locations?.[id],
-      MARK_ID
-    );
-    expect(saved).toBe(true);
+    await markShown(page).toBe(true);
   });
 
   test("Popup recognises your account", async ({ page, extensionId }) => {
@@ -287,11 +332,7 @@ test.describe("Extension features", () => {
     await page.unroute(/\/api\/v1\/user\/map-data\/\d+/);
     await mapPage.waitForAxiosInterceptor();
     await mapPage.waitForUserDataLoaded();
-    const saved = await page.evaluate(
-      (id) => !!window.user?.locations?.[id],
-      MARK_ID
-    );
-    expect(saved).toBe(true);
+    await markShown(page).toBe(true);
   });
 
   test("Map profiles can be created, renamed and deleted", async ({ page }) => {
@@ -330,19 +371,11 @@ test.describe("Extension features", () => {
     await reloadingPost(page, `/api/v1/user/games/${gameId}/profiles/active`, {
       profile_id: profileId,
     });
-    const inNewProfile = await page.evaluate(
-      (id) => !!window.user?.locations?.[id],
-      MARK_ID
-    );
-    expect(inNewProfile).toBe(false);
+    await markShown(page).toBe(false);
 
     await reloadingPost(page, `/api/v1/user/games/${gameId}/profiles/active`, {
       profile_id: null,
     });
-    const backInDefault = await page.evaluate(
-      (id) => !!window.user?.locations?.[id],
-      MARK_ID
-    );
-    expect(backInDefault).toBe(true);
+    await markShown(page).toBe(true);
   });
 });

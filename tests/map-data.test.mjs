@@ -39,7 +39,7 @@ const { MapPage } = await load("../src/contexts/page/pages/map/index.ts", {
   "../page": "export class Page {}",
   "./ui": "export class UI {}",
   "@/common/client": "export class Client {}",
-  "@/common/mapgenie": "export const activateBlockedMapgenieScript = async () => true; export const mapDataUtils = {loadMapData: (...a) => globalThis.dataUtils.loadMapData(...a), getStoredTileCoordinateSwap: () => false}; export const fixMapLinks = async () => {};",
+  "@/common/mapgenie": "export const activateBlockedMapgenieScript = async () => true; export const mapDataUtils = {loadMapData: (...a) => globalThis.dataUtils.loadMapData(...a), getStoredTileCoordinateSwap: () => false}; export const fixMapLinks = async () => {}; export const getNativeProfiles = () => []; export const getActiveNativeProfileId = () => null;",
   "@/common/mapgenie/mapLoadError": "export const showMapLoadError = () => globalThis.alerts++;",
   "@/common/mapgenie/mapDataResponse": "export const prepareMapDataResponseOverride = () => {};",
   "@/common/object": "export const waitForProperty = async (obj, key) => obj[key];",

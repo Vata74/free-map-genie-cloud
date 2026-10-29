@@ -62,7 +62,20 @@ VERSIONS.forEach((version) => {
         expect(removedKeys).toBeDefined();
 
         // Verify migrated data
-        expect(userData.locations).toEqual(expected.locations);
+        // All migrated marks must be stored. The map only shows the ones on
+        // the current map (since NR2BJ's 3.0.14), so compare the storage
+        // where the page can reach it, and otherwise what the map shows once
+        // its markers have loaded.
+        const stored = await mapPage.getStoredLocations(gameId, userId);
+        if (stored) {
+          expect(stored).toEqual(expected.locations);
+        } else {
+          await expect
+            .poll(() => page.evaluate(() => window.user?.locations), {
+              timeout: 20000,
+            })
+            .toEqual(expected.locations);
+        }
         expect(userData.trackedCategoryIds).toEqual(
           expect.arrayContaining(expected.trackedCategoryIds)
         );
