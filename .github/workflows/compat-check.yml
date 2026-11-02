@@ -32,14 +32,16 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      # Before the unit tests: some of them (the guide ones) run in a real
+      # Firefox page.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox
+
       - name: Unit tests (map.js compatibility layer)
         run: node --test tests/*.test.mjs
 
       - name: Build the extension
         run: npm run build
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
 
       # mapgenie.io is sometimes slow/unresponsive to GitHub's shared runner
       # IPs specifically (not reproduced from a residential connection), on
