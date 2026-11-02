@@ -12,7 +12,7 @@ import {
   getActiveNativeProfileId,
 } from "@/common/mapgenie";
 import { LazyGetter } from "lazy-get-decorator";
-import { showMapLoadError } from "@/common/mapgenie/mapLoadError";
+import { showMapLoadError, showProMarkersNotice } from "@/common/mapgenie/mapLoadError";
 import { prepareMapDataResponseOverride } from "@/common/mapgenie/mapDataResponse";
 
 export class MapPage extends Page {
@@ -371,6 +371,7 @@ export class MapPage extends Page {
       ),
     });
     prepareMapDataResponseOverride(mapId, window.mapData!.locations);
+    if (map.markersUnavailable) showProMarkersNotice();
   }
 
   private async loadMapData() {

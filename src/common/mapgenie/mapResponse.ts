@@ -39,15 +39,17 @@ export const selectMapFromGame = (
       }
     }
   }
-  if (map.locations_count > 0 && locationCount === 0) {
-    throw new Error(`MapGenie returned no markers for map ${mapId} (${map.locations_count} expected).`);
-  }
+  // Since the end of October 2026 MapGenie sends no markers for Pro maps to
+  // free accounts, from any endpoint. That is not a broken response, so the
+  // map still loads (empty) and the page tells the user why.
+  const markersUnavailable = map.locations_count > 0 && locationCount === 0;
 
   // Keep the full map list for callers, without duplicating every map's markers
   // in the message sent from the backend to the page.
   const { maps, default_presets: _presets, ...gameInfo } = game;
   return {
     ...map,
+    markersUnavailable,
     game: {
       ...gameInfo,
       maps: maps.map(({ groups: _groups, regions: _regions, config: _config, game: _game, ...info }) => info),

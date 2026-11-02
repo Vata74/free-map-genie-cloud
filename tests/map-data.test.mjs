@@ -40,7 +40,7 @@ const { MapPage } = await load("../src/contexts/page/pages/map/index.ts", {
   "./ui": "export class UI {}",
   "@/common/client": "export class Client {}",
   "@/common/mapgenie": "export const activateBlockedMapgenieScript = async () => true; export const mapDataUtils = {loadMapData: (...a) => globalThis.dataUtils.loadMapData(...a), getStoredTileCoordinateSwap: () => false}; export const fixMapLinks = async () => {}; export const getNativeProfiles = () => []; export const getActiveNativeProfileId = () => null;",
-  "@/common/mapgenie/mapLoadError": "export const showMapLoadError = () => globalThis.alerts++;",
+  "@/common/mapgenie/mapLoadError": "export const showMapLoadError = () => globalThis.alerts++; export const showProMarkersNotice = () => globalThis.notices++;",
   "@/common/mapgenie/mapDataResponse": "export const prepareMapDataResponseOverride = () => {};",
   "@/common/object": "export const waitForProperty = async (obj, key) => obj[key];",
   "lazy-get-decorator": "export const LazyGetter = () => () => {};",
@@ -82,11 +82,18 @@ test("rejects catalog-only, wrong-game, foreign-location and withheld-marker res
     g => { delete g.maps[0].groups[0].categories; },
     g => { delete g.maps[0].groups[0].categories[0].locations; },
     g => { g.maps[0].groups[0].categories[0].locations[0].map_id = 577; },
-    g => { g.maps[0].groups[0].categories[0].locations = []; },
   ]) {
     const g = game(); mutate(g);
     assert.throws(() => selectMapFromGame(g, 20, 64));
   }
+  // MapGenie withholding a Pro map's markers is flagged, not an error
+  const withheld = game();
+  withheld.maps[0].groups[0].categories[0].locations = [];
+  const withheldMap = selectMapFromGame(withheld, 20, 64);
+  assert.equal(withheldMap.markersUnavailable, true);
+  assert.equal(withheldMap.groups.length, 1);
+  assert.equal(selectMapFromGame(game(), 20, 64).markersUnavailable, false);
+
   const empty = game();
   empty.maps[0].locations_count = 0;
   empty.maps[0].groups = [];
@@ -171,6 +178,19 @@ test("failed target fetch stops boot instead of showing the original map as the 
   assert.equal(activated, false);
   assert.equal(window.mapData.map.id, 1);
   assert.equal(globalThis.alerts, 1);
+});
+
+test("a Pro map without markers still loads and tells the user why", async () => {
+  globalThis.notices = 0;
+  const page = pageFixture("?fmgMapId=577");
+  const withheld = game();
+  withheld.maps[1].groups[0].categories[0].locations = [];
+  page.client.mapgenie.fetchMap = async () => selectMapFromGame(withheld, 20, 577);
+  await page.loadRemoteMapData();
+  assert.equal(window.mapData.map.id, 577);
+  assert.equal(window.mapData.locations.length, 0);
+  assert.equal(globalThis.notices, 1);
+  assert.equal(globalThis.alerts, 0);
 });
 
 test("foreign-game and invalid target IDs cannot replace the original map", async () => {

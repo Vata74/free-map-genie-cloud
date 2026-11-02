@@ -116,6 +116,19 @@ test.describe("Extension features", () => {
     expect(unlocked).toBeGreaterThan(0);
   });
 
+  test("Pro maps open without an error", async ({ page }) => {
+    test.setTimeout(90000);
+    await page.goto("https://mapgenie.io/tarkov/maps/factory?fmgMapId=75");
+    await page.waitForFunction(() => window.mapData?.map?.id === 75, undefined, {
+      timeout: 45000,
+    });
+    // The map is on screen and nothing reports a failure. If MapGenie sends
+    // no markers, the page says so instead of crashing.
+    await page.waitForTimeout(5000);
+    expect(await page.locator("#fmg-map-load-error").count()).toBe(0);
+    expect(await page.evaluate(() => !!document.querySelector("#map, .mapboxgl-map, .maplibregl-map"))).toBe(true);
+  });
+
   test("Pro maps show their markers", async ({ page }) => {
     // Reserve (map 75) is a real Pro map. MapGenie's own first data request
     // comes back empty for a free account, so this only passes while the

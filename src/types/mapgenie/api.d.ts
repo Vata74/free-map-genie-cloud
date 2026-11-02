@@ -60,6 +60,8 @@ declare namespace MG.Api {
   }
 
   declare interface MapFull extends Map {
+    // Set by the extension: MapGenie sent the map without any of its markers.
+    markersUnavailable?: boolean;
     config: MapFullMapConfig;
     url: string;
     game: Game;

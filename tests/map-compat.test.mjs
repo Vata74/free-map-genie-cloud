@@ -44,7 +44,7 @@ const { MapPage } = await loadModule("../src/contexts/page/pages/map/index.ts", 
   "@/common/client": "export class Client {}",
   "@/common/mapgenie": "export const activateBlockedMapgenieScript = async () => true; export const mapDataUtils = {}; export const fixMapLinks = async () => {}; export const getNativeProfiles = () => []; export const getActiveNativeProfileId = () => null;",
   "@/common/object": "export const waitForProperty = async (obj, key) => obj[key];",
-  "@/common/mapgenie/mapLoadError": "export const showMapLoadError = () => {};",
+  "@/common/mapgenie/mapLoadError": "export const showMapLoadError = () => {}; export const showProMarkersNotice = () => {};",
   "@/common/mapgenie/mapDataResponse": "export const prepareMapDataResponseOverride = () => {};",
   "lazy-get-decorator": "export const LazyGetter = () => () => {};",
 });
