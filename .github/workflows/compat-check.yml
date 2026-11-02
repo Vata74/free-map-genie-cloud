@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # to commit the README status table
-    timeout-minutes: 25
+    timeout-minutes: 45 # 4 whole attempts of ~6 min each must fit, or the job is cancelled and the README table is never updated
 
     env:
       PLAYWRIGHT_JSON_OUTPUT_NAME: ci-results/compat.json

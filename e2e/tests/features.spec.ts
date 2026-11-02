@@ -120,10 +120,26 @@ test.describe("Extension features", () => {
     // Reserve (map 75) is a real Pro map. MapGenie's own first data request
     // comes back empty for a free account, so this only passes while the
     // extension keeps the markers it loaded (fix from NR2BJ's 3.0.14).
-    await page.goto("https://mapgenie.io/tarkov/maps/factory?fmgMapId=75");
-    await page.waitForFunction(() => window.mapData?.map?.id === 75, undefined, {
-      timeout: 30000,
+    test.setTimeout(90000);
+    // Keep what the extension and the API said, so a failure says why.
+    const log: string[] = [];
+    page.on("console", (m) => {
+      const text = m.text().replace(/%c|[a-z-]+:[^;]*;/g, "").replace(/\s+/g, " ");
+      if (/FMG|map/i.test(text)) log.push(text.slice(0, 300));
     });
+    page.on("response", (r) => {
+      if (/\/api\/v1\/(maps\/75|games\/20\/full)/.test(r.url())) {
+        log.push(`${r.status()} ${r.url()}`);
+      }
+    });
+    await page.goto("https://mapgenie.io/tarkov/maps/factory?fmgMapId=75");
+    await page
+      .waitForFunction(() => window.mapData?.map?.id === 75, undefined, {
+        timeout: 45000,
+      })
+      .catch((err) => {
+        throw new Error(`Reserve never loaded.\n${log.slice(-15).join("\n")}\n${err}`);
+      });
     await expect
       .poll(() => page.evaluate(() => window.mapData!.locations.length), {
         timeout: 20000,
