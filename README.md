@@ -18,7 +18,8 @@ Updated automatically after each daily run against the real mapgenie.io, so you 
 | --- | --- |
 | Map loads with the extension running | ✅ Pass |
 | Locked map links are unlocked on a map page | ✅ Pass |
-| A map opened through an unlocked link loads its locations | ✅ Pass |
+| Pro maps show their markers | ❌ Fail |
+| Guide checklists track more than 100 items | ✅ Pass |
 | MapGenie API: games list is available | ✅ Pass |
 | MapGenie API: full game data is available | ✅ Pass |
 | MapGenie API: map info is available | ✅ Pass |
