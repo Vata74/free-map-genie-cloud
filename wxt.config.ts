@@ -124,7 +124,12 @@ export default defineConfig({
         ? ["declarativeNetRequest", "offscreen", "storage", "identity"]
         : manifestVersion === 2
           ? ["webRequest", "webRequestBlocking", "storage"]
-          : ["declarativeNetRequest", "storage"],
+          : [
+              // Firefox MV3 requires ...WithHostAccess for modifyHeaders rules.
+              "declarativeNetRequest",
+              "declarativeNetRequestWithHostAccess",
+              "storage",
+            ],
     background_page: "background/page.html",
     browser_specific_settings:
       browser === "chrome"
