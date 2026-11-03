@@ -62,7 +62,7 @@ This is a fork of [NR2BJ/free-map-genie](https://github.com/NR2BJ/free-map-genie
    - Unzip the file somewhere permanent (don't delete the folder afterwards — the browser loads the extension from it)
    - Go to `chrome://extensions` (or `edge://extensions`), enable **Developer mode** (top right)
    - **Load unpacked** → select the unzipped folder
-3. **Firefox:** the `.xpi` isn't signed yet, so regular Firefox will only let you load it temporarily via `about:debugging#/runtime/this-firefox` → **Load Temporary Add-on** (resets when you close Firefox). Use Chrome/Edge/Brave for a permanent install until this gets signed through Mozilla.
+3. **Firefox:** open the `.xpi` in Firefox and accept the install. It is signed by Mozilla, so it stays installed. (The release also has an unsigned `.zip`, which Firefox only loads temporarily through `about:debugging#/runtime/this-firefox` → **Load Temporary Add-on**.)
 4. **Android:** [Kiwi Browser](https://kiwibrowser.com) can load the same Chrome zip directly — see [Mobile](#mobile-android).
 5. Open any MapGenie map, click the extension icon, go to the **Cloud** tab — cloud backup is already on, no login required. Link a Google or email account later if you want it on more than one device (see [Setup](#setup-for-people-building-from-source) for the recommendation on why).
 
