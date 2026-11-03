@@ -37,3 +37,7 @@ research/
 # Extension signing key (pins the dev extension ID for OAuth), never commit
 .secrets/
 ci-results/
+
+# Built extension packages (uploaded as GitHub release assets)
+release-assets/*.zip
+release-assets/*.xpi

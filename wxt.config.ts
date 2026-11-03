@@ -8,6 +8,15 @@ export default defineConfig({
   manifestVersion: 3,
   srcDir: "src",
   entrypointsDir: "contexts",
+  zip: {
+    excludeSources: [
+      "research/**",
+      "tools/**",
+      "playwright/**",
+      "playwright-report/**",
+      "**/*.tsbuildinfo",
+    ],
+  },
   modules: ["@wxt-dev/module-react"],
   imports: {
     imports: [
@@ -95,6 +104,8 @@ export default defineConfig({
       "*://cdn.mapgenie.io/*",
       "https://*.googleapis.com/*",
       "https://*.google.com/*",
+      // Premium marker rows are served by the public IGN wikimaps GraphQL API.
+      "*://mollusk.apis.ign.com/*",
     ],
     web_accessible_resources: [
       {
