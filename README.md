@@ -47,69 +47,6 @@ Updated automatically after each daily run against the real mapgenie.io, so you 
 | Pushes a locally marked location to Firestore on sign-up | ✅ Pass |
 <!-- status:cloud:end -->
 
-## Premium map markers (how they come back)
-
-MapGenie now strips premium-map markers server side. For a non-PRO session,
-`GET /api/v1/maps/{id}/data` returns `locations: []` together with
-`proCategoryLocationCounts`, and `/games/{id}/full` returns the map record, tile
-sets and categories with empty `locations` arrays. That is why flipping
-`window.isPro` no longer reveals the markers: the rows never reach the browser.
-
-The same rows are still public through the IGN wikimaps GraphQL API
-(`https://mollusk.apis.ign.com/graphql`). `mapGenieMarkersMultiple` is
-paywalled, but `mapGenieSearch` is not, and the `MapMarker` type it returns
-exposes `lat` / `lng` through ordinary GraphQL over-fetching:
-
-```graphql
-{
-  mapGenieSearch(objectSlug: "escape-from-tarkov", mapSlug: "reserve", terms: "%") {
-    markers { typeSlug markerSlug markerName lat lng }
-  }
-}
-```
-
-`%` reaches the search resolver as a `LIKE` wildcard, so a single request returns
-the complete marker set in MapGenie's own normalized coordinate space
-(`markerSlug` is the location ID, `typeSlug` the category ID).
-
-`MapgenieService.fetchMap` fills the empty `locations` arrays from that endpoint
-before `selectMapFromGame` validates the map, so the existing `?fmgMapId=<id>`
-map switch renders premium maps with their full marker set.
-
-Verified against MapGenie's own counters with `tools/pro-markers.mjs` — marker
-totals match `locations_count` and per-category counts match
-`proCategoryLocationCounts` exactly for every Escape From Tarkov map:
-
-| Map | Markers | Public API |
-| --- | ---: | ---: |
-| Factory | 307 | 307 |
-| Woods | 809 | 809 |
-| Customs | 922 | 922 |
-| Interchange | 1215 | 1215 |
-| Reserve | 1337 | 0 |
-| Shoreline | 1053 | 1053 |
-| The Lab | 605 | 605 |
-| Lighthouse | 1209 | 0 |
-| Streets | 2103 | 0 |
-| Ground Zero | 515 | 0 |
-| The Labyrinth | 140 | 140 |
-| Icebreaker | 201 | 0 |
-
-Limitations: the IGN API exposes marker name, category and coordinates only.
-Descriptions, media and tags of premium markers are not part of that response.
-
-Offline export:
-
-```shell
-node tools/pro-markers.mjs --map 75
-node tools/pro-markers.mjs --game 20 --all
-```
-
-Output is written to `research/pro-markers/out/<game>-<map>-<slug>.json` in
-MapGenie `/maps/{id}/data` location format.
-
-This recovery path was found and written up by [NR2BJ](https://github.com/NR2BJ/free-map-genie) (their v3.0.16 and v3.0.17). Earlier in this fork I concluded the markers could not be recovered because I only looked at MapGenie's own endpoints, which was wrong. If this ever stops working, test the real build and check NR2BJ's latest commits before concluding anything.
-
 This is a fork of [NR2BJ/free-map-genie](https://github.com/NR2BJ/free-map-genie), the actively maintained fork that keeps up with MapGenie's site changes. NR2BJ's fork is itself based on the original [V1P3R-FMG/free-map-genie](https://github.com/V1P3R-FMG/free-map-genie), created by [MrFusiion](https://github.com/MrFusiion). See [Credits](#credits).
 
 ## Screenshots
