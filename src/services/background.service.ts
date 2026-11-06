@@ -64,7 +64,14 @@ class BackgroundService {
       throw new Error("GOOGLE_OAUTH_CLIENT_ID is not configured");
     }
 
-    const redirectUri = browser.identity.getRedirectURL();
+    // Firefox's redirect URL ends with "/", and Google Cloud Console won't
+    // save an allizom.org redirect URI with it. Google compares the URI
+    // character by character, so send it without the slash (the browser still
+    // recognises the final redirect, its path is "/" either way). Chrome's
+    // registered URI has the slash, so it is left as it is.
+    const redirectUri = import.meta.env.FIREFOX
+      ? browser.identity.getRedirectURL().replace(/\/$/, "")
+      : browser.identity.getRedirectURL();
 
     const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
     authUrl.searchParams.set("client_id", clientId);
