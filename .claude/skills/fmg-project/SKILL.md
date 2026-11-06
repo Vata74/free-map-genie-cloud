@@ -54,6 +54,15 @@ Remotes: `fork` is `Vata74/free-map-genie-cloud` (ours), `nr2bj` is upstream. Th
 - Guide checklists (`/guides/...`, for example `escape-from-duckov/guides/quests`) had MapGenie's 100-item limit. NR2BJ's 3.0.14 lifts it and restores the checks after reload (`src/contexts/page/pages/guide/`). Some quests appear twice and both boxes toggle together.
 - Before telling the owner something "can't be done", look at NR2BJ's latest commits (`git fetch nr2bj && git log nr2bj/main`) and test their build (`git worktree add ../nr2bj-wt nr2bj/main`, `npm run build`, point the e2e `extensionPath` at it).
 
+## Firefox gotchas (cloud sign-in, issue 5, November 2026)
+
+- Firefox has no offscreen document: the backend (Dexie, Firebase) runs in the content script of the map page (`src/contexts/content/index.ts`). Things that work in Chrome's offscreen page can fail there.
+- Firebase calls `fetch` detached from `window`. In a Firefox content script that throws `TypeError: 'fetch' called on an object that does not implement interface Window`, shown to the user as `auth/network-request-failed` (email sign-in and Google sign-in both failed). Fixed by `bindFetch()` in `src/common/firebase/app.ts`. The real cause only shows in the Firebase error's `customData.message`, not in `message`. Plain fetches from the same content script worked fine (400 from identitytoolkit), so a network probe alone points the wrong way. To debug: put a temporary try/catch around the SDK call in the content script and log `JSON.stringify({code, customData})`.
+- The Firefox manifest needs the `identity` permission for Google sign-in (`browser.identity` does not exist without it). It was only declared for Chrome.
+- Google sign-in on Firefox also needs the Firefox redirect URI in the Google Cloud Console OAuth Web client (Authorized redirect URIs), next to the Chrome one: `https://<sha1 of the gecko id>.extensions.allizom.org/`. For `free-map-genie-cloud@vata74.github.io` that is `https://3fa69bff3b5e1985bb60c95ab64ae6df00080f4d.extensions.allizom.org/`. This is computed from MDN's description, not read from a running Firefox: if Google answers `redirect_uri_mismatch`, print `browser.identity.getRedirectURL()` and use that.
+- The Firefox e2e project works (`npm run build:firefox`, then `npx playwright test --project=firefox ...`, Firefox is installed by Playwright) but CI only runs Chromium. Playwright cannot see requests made by extension contexts on Firefox. The embedded popup shows no toasts there (CSP blocks the toastr eval inside the page).
+- `waitForAxiosInterceptor()` in the e2e helpers times out on Firefox even when the extension is fine (handler count reads 0 there).
+
 ## CI
 
 - `.github/workflows/compat-check.yml` (daily, the extension) and `cloud-sync-check.yml` (daily, cloud backup). Each runs its tests, then `scripts/update-readme-status.mjs` rewrites its table in the README between the `<!-- status:compat:start -->` or `<!-- status:cloud:start -->` markers and commits it as `github-actions[bot]` with `[skip ci]`. The table shows only Pass or Fail per check. If the login fails, every row says "Not run".

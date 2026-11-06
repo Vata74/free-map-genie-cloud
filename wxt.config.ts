@@ -123,12 +123,14 @@ export default defineConfig({
       browser === "chrome"
         ? ["declarativeNetRequest", "offscreen", "storage", "identity"]
         : manifestVersion === 2
-          ? ["webRequest", "webRequestBlocking", "storage"]
+          ? ["webRequest", "webRequestBlocking", "storage", "identity"]
           : [
               // Firefox MV3 requires ...WithHostAccess for modifyHeaders rules.
               "declarativeNetRequest",
               "declarativeNetRequestWithHostAccess",
               "storage",
+              // Google sign-in (browser.identity.launchWebAuthFlow).
+              "identity",
             ],
     background_page: "background/page.html",
     browser_specific_settings:

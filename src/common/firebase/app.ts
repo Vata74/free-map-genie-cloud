@@ -15,10 +15,26 @@ export const isFirebaseConfigured = Object.values(config).every(
 
 let app: FirebaseApp | null = null;
 
+// In Firefox the backend runs in a content script, and there the Firebase SDK
+// fails every request with "TypeError: 'fetch' called on an object that does
+// not implement interface Window" (it calls fetch without `window` as its
+// `this`). That made sign-in fail with auth/network-request-failed. Binding
+// fetch to window once makes it work wherever it is called from.
+const bindFetch = () => {
+  if (typeof window === "undefined" || typeof window.fetch !== "function") {
+    return;
+  }
+  if ((window.fetch as { __fmgBound?: boolean }).__fmgBound) return;
+  const bound = window.fetch.bind(window);
+  (bound as { __fmgBound?: boolean }).__fmgBound = true;
+  window.fetch = bound;
+};
+
 export function getFirebaseApp(): FirebaseApp | null {
   if (!isFirebaseConfigured) return null;
 
   if (!app) {
+    bindFetch();
     app = getApps()[0] ?? initializeApp(config);
   }
 
