@@ -45,7 +45,7 @@ Updated automatically after each daily run against the real mapgenie.io, so you 
 <!-- status:cloud:start -->
 | Check | Status |
 | --- | --- |
-| Pushes a locally marked location to Firestore on sign-up | ✅ Pass |
+| Pushes a locally marked location to Firestore on sign-up | ❌ Not run (could not log in to MapGenie) |
 <!-- status:cloud:end -->
 
 This is a fork of [NR2BJ/free-map-genie](https://github.com/NR2BJ/free-map-genie), the actively maintained fork that keeps up with MapGenie's site changes. NR2BJ's fork is itself based on the original [V1P3R-FMG/free-map-genie](https://github.com/V1P3R-FMG/free-map-genie), created by [MrFusiion](https://github.com/MrFusiion). See [Credits](#credits).
