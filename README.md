@@ -16,28 +16,28 @@ Updated automatically after each daily run against the real mapgenie.io, so you 
 <!-- status:compat:start -->
 | Check | Status |
 | --- | --- |
-| Map loads with the extension running | ✅ Pass |
-| Locked map links are unlocked on a map page | ✅ Pass |
-| Pro maps open without an error | ✅ Pass |
-| Pro maps show their markers | ✅ Pass |
-| Guide checklists track more than 100 items | ✅ Pass |
-| MapGenie API: games list is available | ✅ Pass |
-| MapGenie API: full game data is available | ✅ Pass |
-| MapGenie API: map info is available | ✅ Pass |
-| MapGenie API: heatmaps endpoint still exists | ✅ Pass |
-| MapGenie API: your account's map data is available | ✅ Pass |
-| Pro features are unlocked | ✅ Pass |
-| Marking a location saves it locally | ✅ Pass |
-| Popup recognises your account | ✅ Pass |
-| Popup shows your real account name | ✅ Pass |
-| Data options are enabled in the popup | ✅ Pass |
-| Import from MapGenie account brings your marks in | ✅ Pass |
-| Map profiles can be created, renamed and deleted | ✅ Pass |
-| Each map profile keeps its own progress | ✅ Pass |
-| Old saved data (FMG v1) migrates correctly on mapgenie.io | ✅ Pass |
-| Old saved data (FMG v2) migrates correctly on mapgenie.io | ✅ Pass |
-| Old saved data (FMG v1) migrates correctly on rdr2map.com | ✅ Pass |
-| Old saved data (FMG v2) migrates correctly on rdr2map.com | ✅ Pass |
+| Map loads with the extension running | ❌ Not run (could not log in to MapGenie) |
+| Locked map links are unlocked on a map page | ❌ Not run (could not log in to MapGenie) |
+| Pro maps open without an error | ❌ Not run (could not log in to MapGenie) |
+| Pro maps show their markers | ❌ Not run (could not log in to MapGenie) |
+| Guide checklists track more than 100 items | ❌ Not run (could not log in to MapGenie) |
+| MapGenie API: games list is available | ❌ Not run (could not log in to MapGenie) |
+| MapGenie API: full game data is available | ❌ Not run (could not log in to MapGenie) |
+| MapGenie API: map info is available | ❌ Not run (could not log in to MapGenie) |
+| MapGenie API: heatmaps endpoint still exists | ❌ Not run (could not log in to MapGenie) |
+| MapGenie API: your account's map data is available | ❌ Not run (could not log in to MapGenie) |
+| Pro features are unlocked | ❌ Not run (could not log in to MapGenie) |
+| Marking a location saves it locally | ❌ Not run (could not log in to MapGenie) |
+| Popup recognises your account | ❌ Not run (could not log in to MapGenie) |
+| Popup shows your real account name | ❌ Not run (could not log in to MapGenie) |
+| Data options are enabled in the popup | ❌ Not run (could not log in to MapGenie) |
+| Import from MapGenie account brings your marks in | ❌ Not run (could not log in to MapGenie) |
+| Map profiles can be created, renamed and deleted | ❌ Not run (could not log in to MapGenie) |
+| Each map profile keeps its own progress | ❌ Not run (could not log in to MapGenie) |
+| Old saved data (FMG v1) migrates correctly on mapgenie.io | ❌ Not run (could not log in to MapGenie) |
+| Old saved data (FMG v2) migrates correctly on mapgenie.io | ❌ Not run (could not log in to MapGenie) |
+| Old saved data (FMG v1) migrates correctly on rdr2map.com | ❌ Not run (could not log in to MapGenie) |
+| Old saved data (FMG v2) migrates correctly on rdr2map.com | ❌ Not run (could not log in to MapGenie) |
 <!-- status:compat:end -->
 
 ### Cloud backup
